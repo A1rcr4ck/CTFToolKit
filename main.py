@@ -18,7 +18,6 @@ PLUGINS = {
 
 
 def load_plugin(name):
-
     if name not in PLUGINS:
         return None
 
@@ -26,7 +25,6 @@ def load_plugin(name):
 
 
 def main():
-
     show_banner()
 
     parser = argparse.ArgumentParser(
@@ -34,29 +32,29 @@ def main():
         description="CTF Toolkit"
     )
 
-    sub = parser.add_subparsers(dest="module")
+    subparsers = parser.add_subparsers(
+        dest="module",
+        required=True
+    )
 
-    usb = sub.add_parser("usb")
-    usb.add_argument("type", choices=["keyboard", "mouse"])
-    usb.add_argument("file")
+    # Register all plugins
+    for module in PLUGINS:
+        plugin = load_plugin(module)
+        if hasattr(plugin, "register"):
+            plugin.register(subparsers)
 
     args = parser.parse_args()
 
-    if args.module is None:
-        parser.print_help()
-        return
+    # Check input file only if the plugin expects one
+    if hasattr(args, "file"):
+        if not file_exists(args.file):
+            error("Input file not found.")
+            return
 
-    if not file_exists(args.file):
-        error("Input file not found.")
-        return
-
-    plugin = load_plugin(args.module)
-
-    if plugin is None:
-        error("Plugin not found.")
-        return
-
-    plugin.run(args)
+    if hasattr(args, "func"):
+        args.func(args)
+    else:
+        error("Invalid command.")
 
 
 if __name__ == "__main__":

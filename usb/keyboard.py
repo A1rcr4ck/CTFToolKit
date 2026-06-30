@@ -51,7 +51,7 @@ def decode_txt(filename):
 def decode_pcap(filename):
 
     try:
-        from usb.tshark import extract_hid_reports
+        from usb.parser import extract_hid_reports
 
         reports = extract_hid_reports(filename)
 
