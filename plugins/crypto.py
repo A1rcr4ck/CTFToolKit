@@ -11,6 +11,8 @@ from crypto.caesar import CaesarCipher
 from crypto.rot13 import ROT13Cipher
 from crypto.atbash import AtbashCipher
 from crypto.vigenere import VigenereCipher
+from crypto.xor import XORCipher
+from crypto.detect import Detector
 
 def register(subparsers):
     crypto = subparsers.add_parser(
@@ -199,6 +201,39 @@ def register(subparsers):
     decode.add_argument("text")
     decode.set_defaults(func=run_vigenere_decode)
 
+    xor = crypto_sub.add_parser(
+        "xor",
+        help="XOR cipher"
+    )
+
+    xor_sub = xor.add_subparsers(
+        dest="action",
+        required=True
+    )
+
+    encode = xor_sub.add_parser("encode")
+    encode.add_argument("key")
+    encode.add_argument("text")
+    encode.set_defaults(func=run_xor_encode)
+
+    decode = xor_sub.add_parser("decode")
+    decode.add_argument("key")
+    decode.add_argument("text")
+    decode.set_defaults(func=run_xor_decode)
+
+    crack = xor_sub.add_parser("crack")
+    crack.add_argument("ciphertext")
+    crack.set_defaults(func=run_xor_crack)
+
+    detect = crypto_sub.add_parser(
+        "detect",
+        help="Detect common encodings"
+    )
+
+    detect.add_argument("text")
+
+    detect.set_defaults(func=run_detect)
+
 
 def run_base64(args: argparse.Namespace):
     cipher = Base64Cipher()
@@ -290,3 +325,37 @@ def run_vigenere_encode(args):
 def run_vigenere_decode(args):
     cipher = VigenereCipher()
     print(cipher.decode(args.text, args.key))
+
+def run_xor_encode(args):
+    cipher = XORCipher()
+    print(cipher.encode(args.text, args.key))
+
+
+def run_xor_decode(args):
+    cipher = XORCipher()
+    print(cipher.decode(args.text, args.key))
+
+
+def run_xor_crack(args):
+    cipher = XORCipher()
+
+    print(f"{'Key':<5}{'Score':<10}Plaintext")
+    print("-" * 60)
+
+    for score, key, text in cipher.crack(args.ciphertext):
+        print(f"{key:<5}{score:<10.2f}{text}")
+
+def run_detect(args):
+    detector = Detector()
+
+    results = detector.detect(args.text)
+
+    if not results:
+        print("No encoding detected.")
+        return
+
+    print(f"{'Encoding':<12}Decoded")
+    print("-" * 60)
+
+    for enc, text in results:
+        print(f"{enc:<12}{text}")
