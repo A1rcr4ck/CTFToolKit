@@ -7,6 +7,9 @@ from crypto.base85 import Base85Cipher
 from crypto.hex import HexCipher
 from crypto.binary import BinaryCipher
 from crypto.octal import OctalCipher
+from crypto.caesar import CaesarCipher
+from crypto.rot13 import ROT13Cipher
+from crypto.atbash import AtbashCipher
 
 def register(subparsers):
     crypto = subparsers.add_parser(
@@ -125,6 +128,55 @@ def register(subparsers):
 
     octal_parser.set_defaults(func=run_octal)
 
+        # Caesar
+    caesar = crypto_sub.add_parser(
+        "caesar",
+        help="Caesar cipher"
+    )
+
+    caesar_sub = caesar.add_subparsers(
+        dest="action",
+        required=True
+    )
+
+    encode = caesar_sub.add_parser("encode")
+    encode.add_argument("shift", type=int)
+    encode.add_argument("text")
+    encode.set_defaults(func=run_caesar_encode)
+
+    decode = caesar_sub.add_parser("decode")
+    decode.add_argument("shift", type=int)
+    decode.add_argument("text")
+    decode.set_defaults(func=run_caesar_decode)
+
+    crack = caesar_sub.add_parser("crack")
+    crack.add_argument("text")
+    crack.set_defaults(func=run_caesar_crack)
+
+        # ROT13
+    rot13 = crypto_sub.add_parser(
+        "rot13",
+        help="ROT13 cipher"
+    )
+
+    rot13.add_argument(
+        "text"
+    )
+
+    rot13.set_defaults(func=run_rot13)
+
+        # Atbash
+    atbash = crypto_sub.add_parser(
+        "atbash",
+        help="Atbash cipher"
+    )
+
+    atbash.add_argument(
+        "text"
+    )
+
+    atbash.set_defaults(func=run_atbash)
+
 
 def run_base64(args: argparse.Namespace):
     cipher = Base64Cipher()
@@ -183,3 +235,27 @@ def run_octal(args: argparse.Namespace):
         print(cipher.encode(args.text))
     else:
         print(cipher.decode(args.text))
+
+def run_caesar_encode(args):
+    cipher = CaesarCipher()
+    print(cipher.encode(args.text, args.shift))
+
+
+def run_caesar_decode(args):
+    cipher = CaesarCipher()
+    print(cipher.decode(args.text, args.shift))
+
+
+def run_caesar_crack(args):
+    cipher = CaesarCipher()
+
+    for shift, text in cipher.crack(args.text):
+        print(f"{shift:2}: {text}")
+
+def run_rot13(args):
+    cipher = ROT13Cipher()
+    print(cipher.encode(args.text))
+
+def run_atbash(args):
+    cipher = AtbashCipher()
+    print(cipher.encode(args.text))
