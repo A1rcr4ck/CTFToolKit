@@ -10,6 +10,7 @@ from crypto.octal import OctalCipher
 from crypto.caesar import CaesarCipher
 from crypto.rot13 import ROT13Cipher
 from crypto.atbash import AtbashCipher
+from crypto.vigenere import VigenereCipher
 
 def register(subparsers):
     crypto = subparsers.add_parser(
@@ -177,6 +178,27 @@ def register(subparsers):
 
     atbash.set_defaults(func=run_atbash)
 
+        # Vigenere
+    vigenere = crypto_sub.add_parser(
+        "vigenere",
+        help="Vigenere cipher"
+    )
+
+    vigenere_sub = vigenere.add_subparsers(
+        dest="action",
+        required=True
+    )
+
+    encode = vigenere_sub.add_parser("encode")
+    encode.add_argument("key")
+    encode.add_argument("text")
+    encode.set_defaults(func=run_vigenere_encode)
+
+    decode = vigenere_sub.add_parser("decode")
+    decode.add_argument("key")
+    decode.add_argument("text")
+    decode.set_defaults(func=run_vigenere_decode)
+
 
 def run_base64(args: argparse.Namespace):
     cipher = Base64Cipher()
@@ -259,3 +281,12 @@ def run_rot13(args):
 def run_atbash(args):
     cipher = AtbashCipher()
     print(cipher.encode(args.text))
+
+def run_vigenere_encode(args):
+    cipher = VigenereCipher()
+    print(cipher.encode(args.text, args.key))
+
+
+def run_vigenere_decode(args):
+    cipher = VigenereCipher()
+    print(cipher.decode(args.text, args.key))
