@@ -1,5 +1,5 @@
-from .base import Cipher
-from .frequency import score
+from ..base import Cipher
+from ..frequency import score
 
 class XORCipher(Cipher):
     def encode(self, data: str, key: str, repeat: bool = True) -> str:

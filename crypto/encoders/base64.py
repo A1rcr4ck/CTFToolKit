@@ -1,6 +1,6 @@
 import base64
 
-from .base import Cipher
+from ..base import Cipher
 
 
 class Base64Cipher(Cipher):

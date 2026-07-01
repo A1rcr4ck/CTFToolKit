@@ -1,10 +1,11 @@
-from crypto.base32 import Base32Cipher
-from crypto.base58 import Base58Cipher
-from crypto.base64 import Base64Cipher
-from crypto.base85 import Base85Cipher
-from crypto.binary import BinaryCipher
-from crypto.hex import HexCipher
-from crypto.octal import OctalCipher
+from crypto.encoders.base32 import Base32Cipher
+from crypto.encoders.base58 import Base58Cipher
+from crypto.encoders.base64 import Base64Cipher
+from crypto.encoders.base85 import Base85Cipher
+from crypto.encoders.binary import BinaryCipher
+from crypto.encoders.hex import HexCipher
+from crypto.encoders.octal import OctalCipher
+from core.input import read_input
 
 
 def register_base(subparsers):
@@ -46,35 +47,42 @@ def register_base(subparsers):
 
 
 def run_base64(args):
+    text = read_input(args.text)
     cipher = Base64Cipher()
-    print(cipher.encode(args.text) if args.action == "encode" else cipher.decode(args.text))
+    print(cipher.encode(text) if args.action == "encode" else cipher.decode(text))
 
 
 def run_base32(args):
+    text = read_input(args.text)
     cipher = Base32Cipher()
-    print(cipher.encode(args.text) if args.action == "encode" else cipher.decode(args.text))
+    print(cipher.encode(text) if args.action == "encode" else cipher.decode(text))
 
 
 def run_base58(args):
+    text = read_input(args.text)
     cipher = Base58Cipher()
-    print(cipher.encode(args.text) if args.action == "encode" else cipher.decode(args.text))
+    print(cipher.encode(text) if args.action == "encode" else cipher.decode(text))
 
 
 def run_base85(args):
+    text = read_input(args.text)
     cipher = Base85Cipher()
-    print(cipher.encode(args.text) if args.action == "encode" else cipher.decode(args.text))
+    print(cipher.encode(text) if args.action == "encode" else cipher.decode(text))
 
 
 def run_hex(args):
+    text = read_input(args.text)
     cipher = HexCipher()
-    print(cipher.encode(args.text) if args.action == "encode" else cipher.decode(args.text))
+    print(cipher.encode(text) if args.action == "encode" else cipher.decode(text))
 
 
 def run_binary(args):
+    text = read_input(args.text)
     cipher = BinaryCipher()
-    print(cipher.encode(args.text) if args.action == "encode" else cipher.decode(args.text))
+    print(cipher.encode(text) if args.action == "encode" else cipher.decode(text))
 
 
 def run_octal(args):
+    text = read_input(args.text)
     cipher = OctalCipher()
-    print(cipher.encode(args.text) if args.action == "encode" else cipher.decode(args.text))
+    print(cipher.encode(text) if args.action == "encode" else cipher.decode(text))

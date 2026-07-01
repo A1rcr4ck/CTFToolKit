@@ -1,6 +1,6 @@
 from math import gcd
 
-from .base import Cipher
+from ..base import Cipher
 
 
 class AffineCipher(Cipher):

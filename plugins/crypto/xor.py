@@ -1,5 +1,5 @@
-from crypto.xor import XORCipher
-
+from crypto.modern.xor import XORCipher
+from core.input import read_input
 
 def register_xor(subparsers):
 
@@ -29,11 +29,11 @@ def register_xor(subparsers):
 
 
 def run_xor_encode(args):
-    print(XORCipher().encode(args.text, args.key))
+    print(XORCipher().encode(read_input(args.text), args.key))
 
 
 def run_xor_decode(args):
-    print(XORCipher().decode(args.text, args.key))
+    print(XORCipher().decode(read_input(args.text), args.key))
 
 
 def run_xor_crack(args):
@@ -41,5 +41,5 @@ def run_xor_crack(args):
     print(f"{'Key':<5}{'Score':<10}Plaintext")
     print("-" * 60)
 
-    for score, key, text in XORCipher().crack(args.ciphertext):
+    for score, key, text in XORCipher().crack(read_input(args.ciphertext)):
         print(f"{key:<5}{score:<10.2f}{text}")

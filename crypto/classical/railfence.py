@@ -1,4 +1,4 @@
-from .base import Cipher
+from ..base import Cipher
 
 
 class RailFenceCipher(Cipher):

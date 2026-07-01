@@ -1,6 +1,6 @@
 from base58 import b58encode, b58decode
 
-from .base import Cipher
+from ..base import Cipher
 
 
 class Base58Cipher(Cipher):

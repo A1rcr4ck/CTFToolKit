@@ -1,5 +1,5 @@
 from crypto.detect import Detector
-
+from core.input import read_input
 
 def register_detect(subparsers):
 
@@ -17,7 +17,7 @@ def run_detect(args):
 
     detector = Detector()
 
-    results = detector.detect(args.text)
+    results = detector.detect(read_input(args.text))
 
     if not results:
         print("No encoding detected.")
