@@ -3,6 +3,7 @@ from crypto.caesar import CaesarCipher
 from crypto.rot13 import ROT13Cipher
 from crypto.vigenere import VigenereCipher
 from crypto.railfence import RailFenceCipher
+from crypto.morse import MorseCipher
 
 
 def register_classical(subparsers):
@@ -92,6 +93,25 @@ def register_classical(subparsers):
     decode.set_defaults(func=run_railfence_decode)
 
 
+    morse = subparsers.add_parser(
+        "morse",
+        help="Morse Code"
+    )
+
+    morse_sub = morse.add_subparsers(
+        dest="action",
+        required=True
+    )
+
+    encode = morse_sub.add_parser("encode")
+    encode.add_argument("text")
+    encode.set_defaults(func=run_morse_encode)
+
+    decode = morse_sub.add_parser("decode")
+    decode.add_argument("text")
+    decode.set_defaults(func=run_morse_decode)
+
+
 def run_caesar_encode(args):
     print(CaesarCipher().encode(args.text, args.shift))
 
@@ -126,3 +146,11 @@ def run_railfence_encode(args):
 
 def run_railfence_decode(args):
     print(RailFenceCipher().decode(args.text, args.rails))
+
+
+def run_morse_encode(args):
+    print(MorseCipher().encode(args.text))
+
+
+def run_morse_decode(args):
+    print(MorseCipher().decode(args.text))
