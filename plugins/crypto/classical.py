@@ -4,6 +4,8 @@ from crypto.rot13 import ROT13Cipher
 from crypto.vigenere import VigenereCipher
 from crypto.railfence import RailFenceCipher
 from crypto.morse import MorseCipher
+from crypto.bacon import BaconCipher
+from crypto.affine import AffineCipher
 
 
 def register_classical(subparsers):
@@ -112,6 +114,48 @@ def register_classical(subparsers):
     decode.set_defaults(func=run_morse_decode)
 
 
+    bacon = subparsers.add_parser(
+        "bacon",
+        help="Baconian Cipher"
+    )
+
+    bacon_sub = bacon.add_subparsers(
+        dest="action",
+        required=True
+    )
+
+    encode = bacon_sub.add_parser("encode")
+    encode.add_argument("text")
+    encode.set_defaults(func=run_bacon_encode)
+
+    decode = bacon_sub.add_parser("decode")
+    decode.add_argument("text")
+    decode.set_defaults(func=run_bacon_decode)
+
+
+    affine = subparsers.add_parser(
+        "affine",
+        help="Affine Cipher"
+    )
+
+    affine_sub = affine.add_subparsers(
+        dest="action",
+        required=True
+    )
+
+    encode = affine_sub.add_parser("encode")
+    encode.add_argument("a", type=int)
+    encode.add_argument("b", type=int)
+    encode.add_argument("text")
+    encode.set_defaults(func=run_affine_encode)
+
+    decode = affine_sub.add_parser("decode")
+    decode.add_argument("a", type=int)
+    decode.add_argument("b", type=int)
+    decode.add_argument("text")
+    decode.set_defaults(func=run_affine_decode)
+
+
 def run_caesar_encode(args):
     print(CaesarCipher().encode(args.text, args.shift))
 
@@ -154,3 +198,18 @@ def run_morse_encode(args):
 
 def run_morse_decode(args):
     print(MorseCipher().decode(args.text))
+
+def run_bacon_encode(args):
+    print(BaconCipher().encode(args.text))
+
+
+def run_bacon_decode(args):
+    print(BaconCipher().decode(args.text))
+
+
+def run_affine_encode(args):
+    print(AffineCipher().encode(args.text, args.a, args.b))
+
+
+def run_affine_decode(args):
+    print(AffineCipher().decode(args.text, args.a, args.b))
