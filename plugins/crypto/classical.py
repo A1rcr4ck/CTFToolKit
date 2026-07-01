@@ -2,6 +2,7 @@ from crypto.atbash import AtbashCipher
 from crypto.caesar import CaesarCipher
 from crypto.rot13 import ROT13Cipher
 from crypto.vigenere import VigenereCipher
+from crypto.railfence import RailFenceCipher
 
 
 def register_classical(subparsers):
@@ -70,6 +71,26 @@ def register_classical(subparsers):
     decode.add_argument("text")
     decode.set_defaults(func=run_vigenere_decode)
 
+    railfence = subparsers.add_parser(
+        "railfence",
+        help="Rail Fence Cipher"
+    )
+
+    railfence_sub = railfence.add_subparsers(
+        dest="action",
+        required=True
+    )
+
+    encode = railfence_sub.add_parser("encode")
+    encode.add_argument("rails", type=int)
+    encode.add_argument("text")
+    encode.set_defaults(func=run_railfence_encode)
+
+    decode = railfence_sub.add_parser("decode")
+    decode.add_argument("rails", type=int)
+    decode.add_argument("text")
+    decode.set_defaults(func=run_railfence_decode)
+
 
 def run_caesar_encode(args):
     print(CaesarCipher().encode(args.text, args.shift))
@@ -98,3 +119,10 @@ def run_vigenere_encode(args):
 
 def run_vigenere_decode(args):
     print(VigenereCipher().decode(args.text, args.key))
+
+def run_railfence_encode(args):
+    print(RailFenceCipher().encode(args.text, args.rails))
+
+
+def run_railfence_decode(args):
+    print(RailFenceCipher().decode(args.text, args.rails))
