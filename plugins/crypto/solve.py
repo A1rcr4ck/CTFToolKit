@@ -14,3 +14,16 @@ def run_solver(args):
 
     for i, (encoding, decoded) in enumerate(history, 1):
         print(f"{i:<5}{encoding:<12}{decoded}")
+
+def register_solver(subparsers):
+    parser = subparsers.add_parser(
+        "solve",
+        help="Automatically decode layered encodings"
+    )
+
+    parser.add_argument(
+        "text",
+        help="Input text or file"
+    )
+
+    parser.set_defaults(func=run_solver)
