@@ -3,6 +3,9 @@ from .hashes import register_hashes
 from .entropy import register_entropy
 from .strings import register_strings
 from .checksec import register_checksec
+from .sections import register_sections
+
+
 
 def register(subparsers):
     reverse = subparsers.add_parser(
@@ -20,3 +23,4 @@ def register(subparsers):
     register_entropy(reverse_sub)
     register_strings(reverse_sub)
     register_checksec(reverse_sub)
+    register_sections(reverse_sub)
