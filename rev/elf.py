@@ -1,6 +1,9 @@
 from pathlib import Path
 import struct
-
+from rev.constants.elf import ELF_MACHINE, ELF_TYPE
+from rev.constants.elf import PROGRAM_TYPES
+from rev.constants.elf import SECTION_TYPES
+from rev.models import DynamicEntry, ProgramHeader, Relocation, SectionHeader, ELFHeader, Symbol
 
 class ELFParser:
 
@@ -22,7 +25,16 @@ class ELFParser:
 
         self.endian = "<" if self.ident[5] == 1 else ">"
 
-        self.header = {}
+        from rev.models import (
+            ELFHeader,
+            ProgramHeader,
+            SectionHeader,
+            Symbol,
+            DynamicEntry,
+            Relocation,
+        )
+
+        self.header = None
         self.program_headers = []
         self.section_headers = []
         self.symbols = []
@@ -80,23 +92,23 @@ class ELFParser:
                 self.data[16:52],
             )
 
-        self.header = {
-            "type": e_type,
-            "machine": e_machine,
-            "entry": e_entry,
-            "phoff": e_phoff,
-            "shoff": e_shoff,
-            "phentsize": e_phentsize,
-            "phnum": e_phnum,
-            "shentsize": e_shentsize,
-            "shnum": e_shnum,
-            "shstrndx": e_shstrndx,
-        }
+        self.header = ELFHeader(
+            type=ELF_TYPE.get(e_type, hex(e_type)),
+            machine=ELF_MACHINE.get(e_machine, hex(e_machine)),
+            entry=e_entry,
+            phoff=e_phoff,
+            shoff=e_shoff,
+            phentsize=e_phentsize,
+            phnum=e_phnum,
+            shentsize=e_shentsize,
+            shnum=e_shnum,
+            shstrndx=e_shstrndx,
+        )
     def _parse_program_headers(self):
 
-        phoff = self.header["phoff"]
-        phentsize = self.header["phentsize"]
-        phnum = self.header["phnum"]
+        phoff = self.header.phoff
+        phentsize = self.header.phentsize
+        phnum = self.header.phnum
 
         for i in range(phnum):
 
@@ -139,22 +151,23 @@ class ELFParser:
                 ) = header
 
             self.program_headers.append(
-                {
-                    "type": p_type,
-                    "offset": p_offset,
-                    "vaddr": p_vaddr,
-                    "filesz": p_filesz,
-                    "memsz": p_memsz,
-                    "flags": p_flags,
-                    "align": p_align,
-                }
+                ProgramHeader(
+                    type=PROGRAM_TYPES.get(p_type, hex(p_type)),
+                    offset=p_offset,
+                    vaddr=p_vaddr,
+                    filesz=p_filesz,
+                    memsz=p_memsz,
+                    flags=p_flags,
+                    align=p_align,
+                )
             )
+        
     def _parse_section_headers(self):
 
-        shoff = self.header["shoff"]
-        shentsize = self.header["shentsize"]
-        shnum = self.header["shnum"]
-        shstrndx = self.header["shstrndx"]
+        shoff = self.header.shoff
+        shentsize = self.header.shentsize
+        shnum = self.header.shnum
+        shstrndx = self.header.shstrndx
 
         raw_headers = []
 
@@ -201,42 +214,42 @@ class ELFParser:
             ].decode(errors="ignore")
 
             self.section_headers.append(
-                {
-                    "name": name,
-                    "type": header[1],
-                    "flags": header[2],
-                    "address": header[3],
-                    "offset": header[4],
-                    "size": header[5],
-                    "link": header[6],
-                    "info": header[7],
-                    "align": header[8],
-                    "entry_size": header[9],
-                }
+                SectionHeader(
+                    name=name,
+                    type=SECTION_TYPES.get(header[1], hex(header[1])),
+                    flags=header[2],
+                    address=header[3],
+                    offset=header[4],
+                    size=header[5],
+                    link=header[6],
+                    info=header[7],
+                    align=header[8],
+                    entry_size=header[9],
+                )
             )
     def _parse_symbols(self):
 
         for section in self.section_headers:
 
-            if section["type"] not in (2, 11):  # SHT_SYMTAB / SHT_DYNSYM
+            if section.type not in ("SYMTAB", "DYNSYM"):  # SHT_SYMTAB / SHT_DYNSYM
                 continue
 
-            strtab = self.section_headers[section["link"]]
+            strtab = self.section_headers[section.link]
 
             string_table = self.data[
-                strtab["offset"]:
-                strtab["offset"] + strtab["size"]
+                strtab.offset:
+                strtab.offset + strtab.size
             ]
 
             count = (
-                section["size"] // section["entry_size"]
-                if section["entry_size"]
+                section.size // section.entry_size
+                if section.entry_size
                 else 0
             )
 
             for i in range(count):
 
-                base = section["offset"] + i * section["entry_size"]
+                base = section.offset + i * section.entry_size
 
                 if self.is_64:
 
@@ -276,31 +289,31 @@ class ELFParser:
                     ].decode(errors="ignore")
 
                 self.symbols.append(
-                    {
-                        "name": name,
-                        "value": st_value,
-                        "size": st_size,
-                        "info": st_info,
-                        "other": st_other,
-                        "section": st_shndx,
-                    }
+                    Symbol(
+                        name=name,
+                        value=st_value,
+                        size=st_size,
+                        info=st_info,
+                        other=st_other,
+                        section=st_shndx,
+                    )
                 )
     def _parse_dynamic(self):
 
         for section in self.section_headers:
 
-            if section["type"] != 6:      # SHT_DYNAMIC
+            if section.type != "DYNAMIC":      # SHT_DYNAMIC
                 continue
 
             count = (
-                section["size"] // section["entry_size"]
-                if section["entry_size"]
+                section.size // section.entry_size
+                if section.entry_size
                 else 0
             )
 
             for i in range(count):
 
-                base = section["offset"] + i * section["entry_size"]
+                base = section.offset + i * section.entry_size
 
                 if self.is_64:
 
@@ -317,30 +330,30 @@ class ELFParser:
                     )
 
                 self.dynamic.append(
-                    {
-                        "tag": tag,
-                        "value": value,
-                    }
+                    DynamicEntry(
+                        tag=tag,
+                        value=value,
+                    )
                 )
     def _parse_relocations(self):
 
         for section in self.section_headers:
 
-            if section["type"] not in (4, 9):   # SHT_RELA / SHT_REL
+            if section.type not in ("RELA", "REL"):   # SHT_RELA / SHT_REL
                 continue
 
-            if section["entry_size"] == 0:
+            if section.entry_size == 0:
                 continue
 
-            count = section["size"] // section["entry_size"]
+            count = section.size // section.entry_size
 
             for i in range(count):
 
-                base = section["offset"] + (i * section["entry_size"])
+                base = section.offset + (i * section.entry_size)
 
                 if self.is_64:
 
-                    if section["type"] == 4:      # RELA
+                    if section.type == "RELA":      # RELA
 
                         r_offset, r_info, r_addend = struct.unpack(
                             self.endian + "QQq",
@@ -358,7 +371,7 @@ class ELFParser:
 
                 else:
 
-                    if section["type"] == 4:
+                    if section.type == "RELA":
 
                         r_offset, r_info, r_addend = struct.unpack(
                             self.endian + "IIi",
@@ -375,11 +388,11 @@ class ELFParser:
                         r_addend = None
 
                 self.relocations.append(
-                    {
-                        "offset": r_offset,
-                        "info": r_info,
-                        "type": r_info & 0xffffffff,
-                        "symbol": r_info >> 32 if self.is_64 else r_info >> 8,
-                        "addend": r_addend,
-                    }
+                    Relocation(
+                        offset=r_offset,
+                        info=r_info,
+                        type=r_info & 0xffffffff,
+                        symbol=r_info >> 32 if self.is_64 else r_info >> 8,
+                        addend=r_addend,
+                    )
                 )
