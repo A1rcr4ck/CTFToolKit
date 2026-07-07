@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ctftoolkit"
+version = "0.1.0"
+description = "A Python toolkit for solving CTF challenges."
+readme = "README.md"
+requires-python = ">=3.10"
+
+authors = [
+    {name = "Sarang G Nair"}
+]
+
+dependencies = [
+    "rich",
+    "click",
+    "pefile",
+    "lief",
+    "pyelftools",
+    "capstone",
+    "base58",
+]
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+include = [
+    "core*",
+    "crypto*",
+    "rev*",
+    "usb*",
+    "plugins*",
+]
