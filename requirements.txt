@@ -2,3 +2,4 @@ rich
 base58
 pytest
 click>=8.1.7
+pefile

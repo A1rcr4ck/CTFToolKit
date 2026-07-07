@@ -1,4 +1,5 @@
 from rev.checksec import checksec
+from rev.checksec_pe import pe_checksec
 
 
 def checksec_command(args):
@@ -13,9 +14,11 @@ def checksec_command(args):
         print(f"Canary  : {data['canary']}")
 
     elif data["type"] == "PE":
-        print(f"ASLR    : {data['aslr']}")
-        print(f"DEP     : {data['dep']}")
-        print(f"CFG     : {data['cfg']}")
+
+        result = pe_checksec(args.file)
+
+        for key, value in result.items():
+            print(f"{key:<20}: {'Enabled' if value else 'Disabled'}")
 
 def register_checksec(subparsers):
     parser = subparsers.add_parser(

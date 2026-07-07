@@ -4,8 +4,9 @@ from .entropy import register_entropy
 from .strings import register_strings
 from .checksec import register_checksec
 from .sections import register_sections
-
-
+from .imports import register_imports
+from .exports import register_exports
+from .resources import register_resources
 
 def register(subparsers):
     reverse = subparsers.add_parser(
@@ -24,3 +25,6 @@ def register(subparsers):
     register_strings(reverse_sub)
     register_checksec(reverse_sub)
     register_sections(reverse_sub)
+    register_imports(reverse_sub)
+    register_exports(reverse_sub)
+    register_resources(reverse_sub)

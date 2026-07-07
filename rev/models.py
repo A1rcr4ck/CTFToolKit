@@ -63,3 +63,42 @@ class Relocation:
     type: int
     symbol: int
     addend: int | None
+
+@dataclass(slots=True)
+class PEHeader:
+    machine: str
+    timestamp: int
+    sections: int
+    entrypoint: int
+    imagebase: int
+    subsystem: str
+    dll: bool
+
+
+@dataclass(slots=True)
+class PESection:
+    name: str
+    virtual_address: int
+    virtual_size: int
+    raw_size: int
+    entropy: float
+    characteristics: int
+
+
+@dataclass(slots=True)
+class Import:
+    dll: str
+    name: str
+    ordinal: int
+
+
+@dataclass(slots=True)
+class Export:
+    name: str
+    ordinal: int
+    address: int
+
+@dataclass(slots=True)
+class Resource:
+    id: int | None
+    name: str | None

@@ -2,30 +2,23 @@ from pathlib import Path
 
 import pefile
 
-
-MACHINE_TYPES = {
-    0x014C: "x86",
-    0x8664: "x86-64",
-    0x01C0: "ARM",
-    0xAA64: "ARM64",
-}
-
-SUBSYSTEMS = {
-    1: "Native",
-    2: "Windows GUI",
-    3: "Windows CUI",
-    5: "OS/2 CUI",
-    7: "POSIX CUI",
-    9: "Windows CE GUI",
-    10: "EFI Application",
-    11: "EFI Boot Service Driver",
-    12: "EFI Runtime Driver",
-}
+from rev.models import (
+    PEHeader,
+    PESection,
+    Import,
+    Export,
+    Resource,
+)
+from rev.constants.pe import (
+    MACHINE_TYPES,
+    SUBSYSTEMS,
+)
 
 
 class PEParser:
 
-    def __init__(self, path: str):
+    def __init__(self, path):
+
         self.path = Path(path)
 
         if not self.path.exists():
@@ -33,77 +26,103 @@ class PEParser:
 
         self.pe = pefile.PE(str(self.path))
 
-    @property
-    def header(self):
-        return {
-            "machine": MACHINE_TYPES.get(
+        self.header = None
+        self.sections = []
+        self.imports = []
+        self.exports = []
+        self.resources = []
+
+        self._parse_header()
+        self._parse_sections()
+        self._parse_imports()
+        self._parse_exports()
+        self._parse_resources()
+
+    def _parse_header(self):
+
+        self.header = PEHeader(
+            machine=MACHINE_TYPES.get(
                 self.pe.FILE_HEADER.Machine,
                 hex(self.pe.FILE_HEADER.Machine),
             ),
-            "timestamp": self.pe.FILE_HEADER.TimeDateStamp,
-            "sections": self.pe.FILE_HEADER.NumberOfSections,
-            "entrypoint": hex(
-                self.pe.OPTIONAL_HEADER.AddressOfEntryPoint
-            ),
-            "imagebase": hex(
-                self.pe.OPTIONAL_HEADER.ImageBase
-            ),
-            "subsystem": SUBSYSTEMS.get(
+            timestamp=self.pe.FILE_HEADER.TimeDateStamp,
+            sections=self.pe.FILE_HEADER.NumberOfSections,
+            entrypoint=self.pe.OPTIONAL_HEADER.AddressOfEntryPoint,
+            imagebase=self.pe.OPTIONAL_HEADER.ImageBase,
+            subsystem=SUBSYSTEMS.get(
                 self.pe.OPTIONAL_HEADER.Subsystem,
                 "Unknown",
             ),
-            "dll": self.pe.is_dll(),
-        }
+            dll=self.pe.is_dll(),
+        )
 
-    @property
-    def sections(self):
-        sections = []
+    def _parse_sections(self):
 
         for section in self.pe.sections:
-            sections.append({
-                "name": section.Name.decode(errors="ignore").rstrip("\x00"),
-                "virtual_address": hex(section.VirtualAddress),
-                "virtual_size": section.Misc_VirtualSize,
-                "raw_size": section.SizeOfRawData,
-                "entropy": round(section.get_entropy(), 2),
-                "characteristics": hex(section.Characteristics),
-            })
 
-        return sections
-
-    @property
-    def imports(self):
-        imports = {}
-
-        if not hasattr(self.pe, "DIRECTORY_ENTRY_IMPORT"):
-            return imports
-
-        for entry in self.pe.DIRECTORY_ENTRY_IMPORT:
-            dll = entry.dll.decode(errors="ignore")
-
-            imports[dll] = []
-
-            for imp in entry.imports:
-                imports[dll].append(
-                    imp.name.decode(errors="ignore")
-                    if imp.name
-                    else f"Ordinal {imp.ordinal}"
+            self.sections.append(
+                PESection(
+                    name=section.Name.decode(
+                        errors="ignore"
+                    ).rstrip("\x00"),
+                    virtual_address=section.VirtualAddress,
+                    virtual_size=section.Misc_VirtualSize,
+                    raw_size=section.SizeOfRawData,
+                    entropy=round(section.get_entropy(), 2),
+                    characteristics=section.Characteristics,
                 )
-
-        return imports
-
-    @property
-    def exports(self):
-        exports = []
-
-        if not hasattr(self.pe, "DIRECTORY_ENTRY_EXPORT"):
-            return exports
-
-        for symbol in self.pe.DIRECTORY_ENTRY_EXPORT.symbols:
-            exports.append(
-                symbol.name.decode(errors="ignore")
-                if symbol.name
-                else f"Ordinal {symbol.ordinal}"
             )
 
-        return exports
+    def _parse_imports(self):
+
+        if not hasattr(self.pe, "DIRECTORY_ENTRY_IMPORT"):
+            return
+
+        for dll in self.pe.DIRECTORY_ENTRY_IMPORT:
+
+            for func in dll.imports:
+
+                self.imports.append(
+                    Import(
+                        dll=dll.dll.decode(errors="ignore"),
+                        name=(
+                            func.name.decode(errors="ignore")
+                            if func.name
+                            else ""
+                        ),
+                        ordinal=func.ordinal,
+                    )
+                )
+
+    def _parse_exports(self):
+
+        if not hasattr(self.pe, "DIRECTORY_ENTRY_EXPORT"):
+            return
+
+        for symbol in self.pe.DIRECTORY_ENTRY_EXPORT.symbols:
+
+            self.exports.append(
+                Export(
+                    name=(
+                        symbol.name.decode(errors="ignore")
+                        if symbol.name
+                        else ""
+                    ),
+                    ordinal=symbol.ordinal,
+                    address=symbol.address,
+                )
+            )
+
+    def _parse_resources(self):
+
+        if not hasattr(self.pe, "DIRECTORY_ENTRY_RESOURCE"):
+            return
+
+        for entry in self.pe.DIRECTORY_ENTRY_RESOURCE.entries:
+
+            self.resources.append(
+                Resource(
+                    id=entry.id,
+                    name=str(entry.name) if entry.name else None,
+                )
+            )
