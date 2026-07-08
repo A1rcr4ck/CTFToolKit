@@ -1,13 +1,15 @@
 from rev.pe import PEParser
 from rev.elf import ELFParser
+from rev.parser import BinaryParser
+from rev.elf import ELFParser
+from rev.pe import PEParser
 
 
 def sections_command(args):
 
-    with open(args.file, "rb") as f:
-        magic = f.read(4)
+    parser = BinaryParser.open(args.file)
 
-    if magic == b"\x7fELF":
+    if isinstance(parser, ELFParser):
 
         parser = ELFParser(args.file)
 
@@ -29,9 +31,7 @@ def sections_command(args):
                 f"{section.size:<12}"
             )
 
-    elif magic[:2] == b"MZ":
-
-        parser = PEParser(args.file)
+    elif isinstance(parser, PEParser):
 
         print(
             f"{'Name':<12}"

@@ -3,10 +3,11 @@ from pathlib import Path
 from rev.pe import PEParser
 
 
-def test_exports():
+def test_pe_header():
 
     pe = PEParser(
         Path("tests/samples/reverse/hello64.exe")
     )
 
-    assert isinstance(pe.exports, list)
+    assert pe.header.machine == "x86-64"
+    assert pe.header.sections > 0

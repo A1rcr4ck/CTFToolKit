@@ -229,9 +229,32 @@ class ELFParser:
             )
     def _parse_symbols(self):
 
+        BIND = {
+            0: "LOCAL",
+            1: "GLOBAL",
+            2: "WEAK",
+        }
+
+        TYPES = {
+            0: "NOTYPE",
+            1: "OBJECT",
+            2: "FUNC",
+            3: "SECTION",
+            4: "FILE",
+            5: "COMMON",
+            6: "TLS",
+        }
+
+        VISIBILITY = {
+            0: "DEFAULT",
+            1: "INTERNAL",
+            2: "HIDDEN",
+            3: "PROTECTED",
+        }
+
         for section in self.section_headers:
 
-            if section.type not in ("SYMTAB", "DYNSYM"):  # SHT_SYMTAB / SHT_DYNSYM
+            if section.type not in ("SYMTAB", "DYNSYM"):
                 continue
 
             strtab = self.section_headers[section.link]
@@ -288,13 +311,18 @@ class ELFParser:
                         st_name:end
                     ].decode(errors="ignore")
 
+                bind = BIND.get(st_info >> 4, str(st_info >> 4))
+                sym_type = TYPES.get(st_info & 0xF, str(st_info & 0xF))
+                visibility = VISIBILITY.get(st_other & 0x3, str(st_other & 0x3))
+
                 self.symbols.append(
                     Symbol(
                         name=name,
                         value=st_value,
                         size=st_size,
-                        info=st_info,
-                        other=st_other,
+                        bind=bind,
+                        type=sym_type,
+                        visibility=visibility,
                         section=st_shndx,
                     )
                 )

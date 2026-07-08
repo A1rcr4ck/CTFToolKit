@@ -1,19 +1,18 @@
 from rev.elf import ELFParser
 from rev.pe import PEParser
+from rev.parser import BinaryParser
 
 
 def imports_command(args):
 
-    with open(args.file, "rb") as f:
-        magic = f.read(4)
+    parser = BinaryParser.open(args.file)
 
-    if magic[:2] == b"MZ":
 
-        pe = PEParser(args.file)
+    if isinstance(parser, PEParser):
 
         current = None
 
-        for imp in pe.imports:
+        for imp in parser.imports:
 
             if current != imp.dll:
                 current = imp.dll
@@ -21,12 +20,9 @@ def imports_command(args):
 
             print(f"  {imp.name}")
 
-    elif magic == b"\x7fELF":
+    elif isinstance(parser, ELFParser):
 
-        elf = ELFParser(args.file)
-
-        for symbol in elf.symbols:
-
+        for symbol in parser.symbols:
             if symbol.section == 0 and symbol.name:
                 print(symbol.name)
 

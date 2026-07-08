@@ -7,6 +7,12 @@ from .sections import register_sections
 from .imports import register_imports
 from .exports import register_exports
 from .resources import register_resources
+from .symbols import register_symbols
+from .dynamic import register_dynamic
+from .relocations import register_relocations
+from .program_headers import register_program_headers
+from .elf_header import register_elf_header
+from .pe_header import register_pe_header
 
 def register(subparsers):
     reverse = subparsers.add_parser(
@@ -28,3 +34,10 @@ def register(subparsers):
     register_imports(reverse_sub)
     register_exports(reverse_sub)
     register_resources(reverse_sub)
+    register_symbols(reverse_sub)
+    register_dynamic(reverse_sub)
+    register_relocations(reverse_sub)
+    register_program_headers(reverse_sub)
+    register_elf_header(reverse_sub)
+    register_pe_header(reverse_sub)
+

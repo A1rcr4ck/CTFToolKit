@@ -45,8 +45,9 @@ class Symbol:
     name: str
     value: int
     size: int
-    info: int
-    other: int
+    bind: str
+    type: str
+    visibility: str
     section: int
 
 

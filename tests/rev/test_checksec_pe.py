@@ -6,7 +6,7 @@ from rev.checksec_pe import pe_checksec
 def test_checksec():
 
     result = pe_checksec(
-        Path("C:\\Users\\saran\\Downloads\\ChromeSetup.exe")
+        Path("tests/samples/reverse/hello64.exe")
     )
 
     assert "ASLR" in result
