@@ -3,7 +3,7 @@ from pathlib import Path
 from usb.keyboard import decode_file
 
 
-SAMPLE = Path("samples/usb/keyboard.txt")
+SAMPLE = Path("tests/samples/usb/keyboard.txt")
 
 
 def test_keyboard_decode():
