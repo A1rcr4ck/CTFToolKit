@@ -40,4 +40,3 @@ def register(subparsers):
     register_program_headers(reverse_sub)
     register_elf_header(reverse_sub)
     register_pe_header(reverse_sub)
-
