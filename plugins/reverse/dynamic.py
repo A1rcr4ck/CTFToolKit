@@ -1,5 +1,8 @@
 from rev.elf import ELFParser
 
+from core.cli import add_output_argument
+from core.output.dispatcher import dispatch
+
 
 def dynamic_command(args):
 
@@ -9,14 +12,28 @@ def dynamic_command(args):
         print("No dynamic section found.")
         return
 
-    print(f"{'Tag':<18}Value")
-    print("-" * 35)
+    rows = []
 
     for entry in elf.dynamic:
-        print(
-            f"{hex(entry.tag):<18}"
-            f"{hex(entry.value)}"
+
+        rows.append(
+            (
+                hex(entry.tag),
+                hex(entry.value),
+            )
         )
+
+    table = (
+        "ELF Dynamic Section",
+        ["Tag", "Value"],
+        rows,
+    )
+
+    dispatch(
+        args.output,
+        table_data=table,
+        json_data=elf.dynamic,
+    )
 
 
 def register_dynamic(subparsers):
@@ -30,5 +47,7 @@ def register_dynamic(subparsers):
         "file",
         help="Input ELF binary",
     )
+
+    add_output_argument(parser)
 
     parser.set_defaults(func=dynamic_command)

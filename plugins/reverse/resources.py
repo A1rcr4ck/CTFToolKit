@@ -1,5 +1,8 @@
 from rev.pe import PEParser
 
+from core.cli import add_output_argument
+from core.output.dispatcher import dispatch
+
 
 RESOURCE_TYPES = {
     1: "CURSOR",
@@ -28,24 +31,48 @@ def resources_command(args):
         print("No resources found.")
         return
 
-    print(f"{'ID':<8}{'Type'}")
-    print("-" * 30)
+    rows = []
 
     for resource in pe.resources:
 
-        resource_id = resource.id if resource.id is not None else "-"
+        resource_id = (
+            resource.id
+            if resource.id is not None
+            else "-"
+        )
 
         if resource.name:
             resource_type = resource.name
+
         elif resource.id is not None:
+
             resource_type = RESOURCE_TYPES.get(
                 resource.id,
                 f"Unknown ({resource.id})",
             )
+
         else:
+
             resource_type = "Named Resource"
 
-        print(f"{resource_id:<8}{resource_type}")
+        rows.append(
+            (
+                resource_id,
+                resource_type,
+            )
+        )
+
+    table = (
+        "PE Resources",
+        ["ID", "Type"],
+        rows,
+    )
+
+    dispatch(
+        args.output,
+        table_data=table,
+        json_data=pe.resources,
+    )
 
 
 def register_resources(subparsers):
@@ -60,5 +87,6 @@ def register_resources(subparsers):
         help="Input PE file",
     )
 
-    parser.set_defaults(func=resources_command)
+    add_output_argument(parser)
 
+    parser.set_defaults(func=resources_command)

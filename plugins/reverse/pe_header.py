@@ -1,18 +1,35 @@
 from rev.pe import PEParser
 
+from core.cli import add_output_argument
+from core.output.dispatcher import dispatch
+
 
 def pe_header_command(args):
 
     pe = PEParser(args.file)
     h = pe.header
 
-    print(f"{'Machine':<15}: {h.machine}")
-    print(f"{'Timestamp':<15}: {h.timestamp}")
-    print(f"{'Sections':<15}: {h.sections}")
-    print(f"{'Entrypoint':<15}: {hex(h.entrypoint)}")
-    print(f"{'Image Base':<15}: {hex(h.imagebase)}")
-    print(f"{'Subsystem':<15}: {h.subsystem}")
-    print(f"{'DLL':<15}: {h.dll}")
+    rows = [
+        ("Machine", h.machine),
+        ("Timestamp", h.timestamp),
+        ("Sections", h.sections),
+        ("Entrypoint", hex(h.entrypoint)),
+        ("Image Base", hex(h.imagebase)),
+        ("Subsystem", h.subsystem),
+        ("DLL", h.dll),
+    ]
+
+    table = (
+        "PE Header",
+        ["Field", "Value"],
+        rows,
+    )
+
+    dispatch(
+        args.output,
+        table_data=table,
+        json_data=h,
+    )
 
 
 def register_pe_header(subparsers):
@@ -26,5 +43,7 @@ def register_pe_header(subparsers):
         "file",
         help="Input PE binary",
     )
+
+    add_output_argument(parser)
 
     parser.set_defaults(func=pe_header_command)

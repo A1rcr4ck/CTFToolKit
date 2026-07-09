@@ -1,8 +1,9 @@
-from rev.pe import PEParser
-from rev.elf import ELFParser
+from core.output.dispatcher import dispatch
 from rev.parser import BinaryParser
 from rev.elf import ELFParser
 from rev.pe import PEParser
+from core.output import print_table
+from core.cli import add_output_argument
 
 
 def sections_command(args):
@@ -11,45 +12,57 @@ def sections_command(args):
 
     if isinstance(parser, ELFParser):
 
-        parser = ELFParser(args.file)
-
-        print(
-            f"{'Name':<20}"
-            f"{'Type':<12}"
-            f"{'Address':<18}"
-            f"{'Size':<12}"
-        )
-
-        print("-" * 65)
+        rows = []
 
         for section in parser.section_headers:
 
-            print(
-                f"{section.name:<20}"
-                f"{section.type:<12}"
-                f"{hex(section.address):<18}"
-                f"{section.size:<12}"
+            rows.append(
+                (
+                    section.name,
+                    section.type,
+                    hex(section.address),
+                    str(section.size),
+                )
             )
+
+        table = (
+            "ELF Sections",
+            ["Name", "Type", "Address", "Size"],
+            rows,
+        )
+
+        dispatch(
+            args.output,
+            table_data=table,
+            json_data=parser.section_headers,
+        )
 
     elif isinstance(parser, PEParser):
 
-        print(
-            f"{'Name':<12}"
-            f"{'VA':<12}"
-            f"{'Raw Size':<12}"
-            f"{'Entropy':<10}"
-        )
-
-        print("-" * 50)
+        rows = []
 
         for section in parser.sections:
 
-            print(
-                f"{section.name:<12}"
-                f"{hex(section.virtual_address):<12}"
-                f"{section.raw_size:<12}"
-                f"{section.entropy:<10}"
+            rows.append(
+                (
+                    section.name,
+                    hex(section.virtual_address),
+                    str(section.raw_size),
+                    f"{section.entropy:.2f}",
+                )
             )
+
+        table = (
+            "PE Sections",
+            ["Name", "Virtual Address", "Raw Size", "Entropy"],
+            rows,
+        )
+
+        dispatch(
+            args.output,
+            table_data=table,
+            json_data=parser.section_headers,
+        )
 
     else:
 
@@ -66,5 +79,7 @@ def register_sections(subparsers):
         "file",
         help="Input binary",
     )
+
+    add_output_argument(parser)
 
     parser.set_defaults(func=sections_command)

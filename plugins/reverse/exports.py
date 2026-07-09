@@ -1,5 +1,8 @@
 from rev.pe import PEParser
 
+from core.cli import add_output_argument
+from core.output.dispatcher import dispatch
+
 
 def exports_command(args):
 
@@ -9,15 +12,29 @@ def exports_command(args):
         print("No exports found.")
         return
 
-    print(f"{'Ordinal':<10}{'Address':<12}Name")
-    print("-" * 50)
+    rows = []
 
     for export in pe.exports:
-        print(
-            f"{export.ordinal:<10}"
-            f"{hex(export.address):<12}"
-            f"{export.name}"
+
+        rows.append(
+            (
+                export.ordinal,
+                hex(export.address),
+                export.name,
+            )
         )
+
+    table = (
+        "PE Exports",
+        ["Ordinal", "Address", "Name"],
+        rows,
+    )
+
+    dispatch(
+        args.output,
+        table_data=table,
+        json_data=pe.exports,
+    )
 
 
 def register_exports(subparsers):
@@ -31,5 +48,7 @@ def register_exports(subparsers):
         "file",
         help="Input binary",
     )
+
+    add_output_argument(parser)
 
     parser.set_defaults(func=exports_command)

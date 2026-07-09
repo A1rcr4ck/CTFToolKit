@@ -1,5 +1,8 @@
 from rev.elf import ELFParser
 
+from core.cli import add_output_argument
+from core.output.dispatcher import dispatch
+
 
 def relocations_command(args):
 
@@ -9,29 +12,32 @@ def relocations_command(args):
         print("No relocations found.")
         return
 
-    print(
-        f"{'Offset':<18}"
-        f"{'Type':<12}"
-        f"{'Symbol':<10}"
-        f"{'Addend'}"
-    )
-
-    print("-" * 60)
+    rows = []
 
     for rel in elf.relocations:
 
-        addend = (
-            hex(rel.addend)
-            if rel.addend is not None
-            else "-"
+        rows.append(
+            (
+                hex(rel.offset),
+                rel.type,
+                rel.symbol,
+                hex(rel.addend)
+                if rel.addend is not None
+                else "-",
+            )
         )
 
-        print(
-            f"{hex(rel.offset):<18}"
-            f"{rel.type:<12}"
-            f"{rel.symbol:<10}"
-            f"{addend}"
-        )
+    table = (
+        "ELF Relocations",
+        ["Offset", "Type", "Symbol", "Addend"],
+        rows,
+    )
+
+    dispatch(
+        args.output,
+        table_data=table,
+        json_data=elf.relocations,
+    )
 
 
 def register_relocations(subparsers):
@@ -45,5 +51,7 @@ def register_relocations(subparsers):
         "file",
         help="Input ELF binary",
     )
+
+    add_output_argument(parser)
 
     parser.set_defaults(func=relocations_command)

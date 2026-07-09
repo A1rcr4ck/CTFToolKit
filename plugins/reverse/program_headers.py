@@ -1,31 +1,39 @@
 from rev.elf import ELFParser
 
+from core.cli import add_output_argument
+from core.output.dispatcher import dispatch
+
 
 def program_headers_command(args):
 
     elf = ELFParser(args.file)
 
-    print(
-        f"{'Type':<18}"
-        f"{'Offset':<12}"
-        f"{'VAddr':<18}"
-        f"{'FileSz':<10}"
-        f"{'MemSz':<10}"
-        f"{'Flags'}"
-    )
-
-    print("-" * 80)
+    rows = []
 
     for ph in elf.program_headers:
 
-        print(
-            f"{ph.type:<18}"
-            f"{hex(ph.offset):<12}"
-            f"{hex(ph.vaddr):<18}"
-            f"{ph.filesz:<10}"
-            f"{ph.memsz:<10}"
-            f"{hex(ph.flags)}"
+        rows.append(
+            (
+                ph.type,
+                hex(ph.offset),
+                hex(ph.vaddr),
+                str(ph.filesz),
+                str(ph.memsz),
+                hex(ph.flags),
+            )
         )
+
+    table = (
+        "ELF Program Headers",
+        ["Type", "Offset", "VAddr", "FileSz", "MemSz", "Flags"],
+        rows,
+    )
+
+    dispatch(
+        args.output,
+        table_data=table,
+        json_data=elf.program_headers,
+    )
 
 
 def register_program_headers(subparsers):
@@ -40,5 +48,6 @@ def register_program_headers(subparsers):
         help="Input ELF binary",
     )
 
+    add_output_argument(parser)
+
     parser.set_defaults(func=program_headers_command)
-    

@@ -24,7 +24,7 @@ def register(subparsers):
         dest="command",
         required=True
     )
-
+   
     register_info(reverse_sub)
     register_hashes(reverse_sub)
     register_entropy(reverse_sub)
