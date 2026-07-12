@@ -5,41 +5,43 @@ from capstone import (
     CS_MODE_64,
 )
 
+from rev.reader import BinaryReader
+
 
 class Disassembler:
 
     def __init__(self, parser):
 
         self.parser = parser
+        self.reader = BinaryReader(parser.memory)
 
-        if parser.header.machine in (
-            "AMD x86-64",
-            "x86-64",
-        ):
+        machine = parser.header.machine
+
+        if machine in ("AMD x86-64", "x86-64"):
             self.cs = Cs(
                 CS_ARCH_X86,
                 CS_MODE_64,
             )
 
-        elif parser.header.machine in (
-            "Intel 80386",
-            "x86",
-        ):
+        elif machine in ("Intel 80386", "x86"):
             self.cs = Cs(
                 CS_ARCH_X86,
                 CS_MODE_32,
             )
 
         else:
-            raise NotImplementedError(
-                parser.header.machine
-            )
+            raise NotImplementedError(machine)
 
-    def disassemble(
+    def section(
         self,
-        region,
-        count=20,
+        name: str,
+        count: int = 50,
     ):
+
+        region = self.reader.region(name)
+
+        if region is None:
+            raise ValueError(name)
 
         instructions = []
 
@@ -51,6 +53,7 @@ class Disassembler:
             instructions.append(
                 (
                     ins.address,
+                    ins.bytes.hex(" "),
                     ins.mnemonic,
                     ins.op_str,
                 )
