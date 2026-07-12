@@ -15,6 +15,7 @@ from .elf_header import register_elf_header
 from .pe_header import register_pe_header
 from .disassemble import register_disassemble
 from .hexdump import register_hexdump
+from .functions import register_functions
 
 
 def register(subparsers):
@@ -46,3 +47,4 @@ def register(subparsers):
     register_pe_header(reverse_sub)
     register_disassemble(reverse_sub)
     register_hexdump(reverse_sub)
+    register_functions(reverse_sub)
