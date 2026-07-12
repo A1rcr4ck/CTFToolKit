@@ -1,11 +1,28 @@
+# from rev import parser
+from csv import reader
+
 from rev.strings import extract_strings
+from rev.parser import BinaryParser
+from rev.reader import BinaryReader
 
 
 def strings_command(args):
-    strings = extract_strings(
-        args.file,
-        args.min_length
-    )
+    parser = BinaryParser.open(args.file)
+    reader = BinaryReader(parser.memory)
+
+    seen = set()
+    strings = []
+
+    for region in reader.regions:
+
+        for string in extract_strings(
+            region.data,
+            args.min_length,
+        ):
+
+            if string not in seen:
+                seen.add(string)
+                strings.append(string)
 
     for string in strings:
         print(string)

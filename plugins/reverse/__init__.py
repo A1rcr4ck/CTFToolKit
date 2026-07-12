@@ -16,17 +16,19 @@ from .pe_header import register_pe_header
 from .disassemble import register_disassemble
 from .hexdump import register_hexdump
 
+
 def register(subparsers):
+
     reverse = subparsers.add_parser(
         "reverse",
-        help="Reverse engineering utilities"
+        help="Reverse engineering utilities",
     )
 
     reverse_sub = reverse.add_subparsers(
         dest="command",
-        required=True
+        required=True,
     )
-   
+
     register_info(reverse_sub)
     register_hashes(reverse_sub)
     register_entropy(reverse_sub)

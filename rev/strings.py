@@ -43,8 +43,7 @@ def extract_utf16be(data: bytes, min_length: int):
     return strings
 
 
-def extract_strings(path: str, min_length: int = 4):
-    data = Path(path).read_bytes()
+def extract_strings(data: bytes, min_length: int = 4):
 
     results = []
     seen = set()
@@ -59,3 +58,10 @@ def extract_strings(path: str, min_length: int = 4):
             results.append(string)
 
     return results
+
+def extract_strings_from_file(
+    path: str,
+    min_length: int = 4,
+):
+    data = Path(path).read_bytes()
+    return extract_strings(data, min_length)

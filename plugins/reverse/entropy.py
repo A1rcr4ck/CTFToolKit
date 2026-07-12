@@ -1,28 +1,53 @@
+from core.cli import add_output_argument
+from core.output.dispatcher import dispatch
+
+from rev.parser import BinaryParser
 from rev.entropy import calculate_entropy
 
 
 def entropy_command(args):
-    entropy = calculate_entropy(args.file)
 
-    print(f"Entropy : {entropy:.4f} bits/byte")
+    binary = BinaryParser.open(args.file)
 
-    if entropy > 7.2:
-        print("Assessment : High (Possibly packed/encrypted)")
-    elif entropy > 6.5:
-        print("Assessment : Medium")
-    else:
-        print("Assessment : Low")
+    rows = []
+
+    for region in binary.memory:
+
+        rows.append(
+            (
+                region.name,
+                region.file_size,
+                calculate_entropy(region.data),
+            )
+        )
+
+    table = (
+        "Section Entropy",
+        ["Section", "Size", "Entropy"],
+        rows,
+    )
+
+    dispatch(
+        args.output,
+        table_data=table,
+        json_data=rows,
+    )
 
 
 def register_entropy(subparsers):
+
     parser = subparsers.add_parser(
         "entropy",
-        help="Calculate Shannon entropy"
+        help="Calculate Shannon entropy",
     )
 
     parser.add_argument(
         "file",
-        help="Input file"
+        help="Input binary",
     )
 
-    parser.set_defaults(func=entropy_command)
+    add_output_argument(parser)
+
+    parser.set_defaults(
+        func=entropy_command,
+    )

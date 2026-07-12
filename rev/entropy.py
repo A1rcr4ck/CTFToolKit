@@ -2,8 +2,7 @@ import math
 from pathlib import Path
 
 
-def calculate_entropy(path: str) -> float:
-    data = Path(path).read_bytes()
+def calculate_entropy(data: bytes) -> float:
 
     if not data:
         return 0.0
@@ -17,6 +16,7 @@ def calculate_entropy(path: str) -> float:
     length = len(data)
 
     for count in frequency:
+
         if count == 0:
             continue
 
@@ -24,3 +24,10 @@ def calculate_entropy(path: str) -> float:
         entropy -= probability * math.log2(probability)
 
     return round(entropy, 4)
+
+
+def calculate_entropy_from_file(path: str) -> float:
+
+    return calculate_entropy(
+        Path(path).read_bytes()
+    )
