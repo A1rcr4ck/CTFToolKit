@@ -17,7 +17,6 @@ from .disassemble import register_disassemble
 from .hexdump import register_hexdump
 from .functions import register_functions
 
-
 def register(subparsers):
 
     reverse = subparsers.add_parser(

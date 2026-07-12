@@ -10,8 +10,13 @@ def test_functions():
         Path("tests/samples/reverse/hello_elf64")
     )
 
-    funcs = FunctionFinder(
+    functions = FunctionFinder(
         elf
     ).find()
 
-    assert len(funcs) > 0
+    assert len(functions) > 0
+
+    assert any(
+        function["name"] == "main"
+        for function in functions
+    )

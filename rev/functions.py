@@ -6,44 +6,67 @@ class FunctionFinder:
     def __init__(self, parser):
 
         self.parser = parser
-        self.dis = Disassembler(parser)
+        self.disassembler = Disassembler(parser)
+
+    def from_symbols(self):
+
+        functions = []
+
+        if not hasattr(self.parser, "symbols"):
+            return functions
+
+        for symbol in self.parser.symbols:
+
+            if (
+                symbol.type == "FUNC"
+                and symbol.value != 0
+            ):
+
+                functions.append(
+                    {
+                        "name": symbol.name,
+                        "address": symbol.value,
+                        "size": symbol.size,
+                        "source": "symbol",
+                    }
+                )
+
+        return functions
+
+    def from_exports(self):
+
+        functions = []
+
+        if not hasattr(self.parser, "exports"):
+            return functions
+
+        for export in self.parser.exports:
+
+            functions.append(
+                {
+                    "name": export.name,
+                    "address": export.address,
+                    "size": 0,
+                    "source": "export",
+                }
+            )
+
+        return functions
 
     def find(self):
 
         functions = []
 
-        # ELF symbols
-        if hasattr(self.parser, "symbols"):
-
-            for sym in self.parser.symbols:
-
-                if (
-                    getattr(sym, "type", "") == "FUNC"
-                    and sym.value != 0
-                ):
-
-                    functions.append(
-                        (
-                            sym.name,
-                            sym.value,
-                            sym.size,
-                        )
-                    )
-
-        # PE exports
-        if hasattr(self.parser, "exports"):
-
-            for exp in self.parser.exports:
-
-                functions.append(
-                    (
-                        exp.name,
-                        exp.address,
-                        0,
-                    )
-                )
-
-        return sorted(
-            functions,
-            key=lambda x: x[1],
+        functions.extend(
+            self.from_symbols()
         )
+
+        functions.extend(
+            self.from_exports()
+        )
+
+        functions.sort(
+            key=lambda x: x["address"]
+        )
+
+        return functions

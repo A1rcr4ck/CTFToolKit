@@ -1,35 +1,41 @@
-from core.cli import add_output_argument
-from core.output.dispatcher import dispatch
-
 from rev.parser import BinaryParser
 from rev.functions import FunctionFinder
+
+from core.cli import add_output_argument
+from core.output.dispatcher import dispatch
 
 
 def functions_command(args):
 
     parser = BinaryParser.open(args.file)
 
-    rows = FunctionFinder(
+    functions = FunctionFinder(
         parser
     ).find()
 
+    rows = []
+
+    for function in functions:
+
+        rows.append(
+            (
+                function["name"],
+                hex(function["address"]),
+                function["size"],
+                function["source"],
+            )
+        )
+
     table = (
         "Functions",
-        ["Name", "Address", "Size"],
-        [
-            (
-                name,
-                hex(addr),
-                size,
-            )
-            for name, addr, size in rows
-        ],
+        ["Name", "Address", "Size", "Source"],
+        rows,
     )
 
     dispatch(
         args.output,
         table_data=table,
-        json_data=rows,
+        json_data=functions,
     )
 
 
