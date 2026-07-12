@@ -1,40 +1,43 @@
 from rev.pe import PEParser
 
+from core.command import BaseCommand
 from core.cli import add_output_argument
-from core.output.dispatcher import dispatch
+
+
+class ExportsCommand(BaseCommand):
+
+    def __init__(self, path):
+
+        self.pe = PEParser(path)
+
+    def build_table(self):
+
+        rows = []
+
+        for export in self.pe.exports:
+
+            rows.append(
+                (
+                    export.ordinal,
+                    hex(export.address),
+                    export.name,
+                )
+            )
+
+        return (
+            "PE Exports",
+            ["Ordinal", "Address", "Name"],
+            rows,
+        )
+
+    def build_json(self):
+
+        return self.pe.exports
 
 
 def exports_command(args):
 
-    pe = PEParser(args.file)
-
-    if not pe.exports:
-        print("No exports found.")
-        return
-
-    rows = []
-
-    for export in pe.exports:
-
-        rows.append(
-            (
-                export.ordinal,
-                hex(export.address),
-                export.name,
-            )
-        )
-
-    table = (
-        "PE Exports",
-        ["Ordinal", "Address", "Name"],
-        rows,
-    )
-
-    dispatch(
-        args.output,
-        table_data=table,
-        json_data=pe.exports,
-    )
+    ExportsCommand(args.file).run(args.output)
 
 
 def register_exports(subparsers):
