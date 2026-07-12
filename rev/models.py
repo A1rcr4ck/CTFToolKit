@@ -81,7 +81,10 @@ class PESection:
     name: str
     virtual_address: int
     virtual_size: int
+
     raw_size: int
+    pointer_to_raw_data: int
+
     entropy: float
     characteristics: int
 

@@ -1,5 +1,6 @@
 from pathlib import Path
 import struct
+from rev.memory import MemoryRegion
 from rev.constants.elf import ELF_MACHINE, ELF_TYPE
 from rev.constants.elf import PROGRAM_TYPES
 from rev.constants.elf import SECTION_TYPES
@@ -424,3 +425,25 @@ class ELFParser:
                         addend=r_addend,
                     )
                 )
+    @property
+    def memory(self):
+
+        regions = []
+
+        for section in self.section_headers:
+
+            regions.append(
+                MemoryRegion(
+                    name=section.name,
+                    virtual_address=section.address,
+                    virtual_size=section.size,
+                    file_offset=section.offset,
+                    file_size=section.size,
+                    data=self.data[
+                        section.offset:
+                        section.offset + section.size
+                    ],
+                )
+            )
+
+        return regions
