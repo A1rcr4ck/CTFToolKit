@@ -49,12 +49,12 @@ pip-wheel-metadata/
 *.log
 
 # ==========================================
-# Output
+# Generated Output
 # ==========================================
 
-output/
-reports/
-exports/
+/output/
+/reports/
+/exports/
 
 # ==========================================
 # OS Files
@@ -108,4 +108,3 @@ __pycache__/
 dist/
 build/
 *.egg-info/
-output/
