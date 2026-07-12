@@ -1,47 +1,43 @@
-from core.output.dispatcher import dispatch
 from rev.parser import BinaryParser
 from rev.elf import ELFParser
 from rev.pe import PEParser
-from core.output import print_table
+
+from core.command import BaseCommand
 from core.cli import add_output_argument
 
 
-def sections_command(args):
+class SectionsCommand(BaseCommand):
 
-    parser = BinaryParser.open(args.file)
+    def __init__(self, path):
 
-    if isinstance(parser, ELFParser):
+        self.parser = BinaryParser.open(path)
 
-        rows = []
+    def build_table(self):
 
-        for section in parser.section_headers:
+        if isinstance(self.parser, ELFParser):
 
-            rows.append(
-                (
-                    section.name,
-                    section.type,
-                    hex(section.address),
-                    str(section.size),
+            rows = []
+
+            for section in self.parser.section_headers:
+
+                rows.append(
+                    (
+                        section.name,
+                        section.type,
+                        hex(section.address),
+                        str(section.size),
+                    )
                 )
+
+            return (
+                "ELF Sections",
+                ["Name", "Type", "Address", "Size"],
+                rows,
             )
 
-        table = (
-            "ELF Sections",
-            ["Name", "Type", "Address", "Size"],
-            rows,
-        )
-
-        dispatch(
-            args.output,
-            table_data=table,
-            json_data=parser.section_headers,
-        )
-
-    elif isinstance(parser, PEParser):
-
         rows = []
 
-        for section in parser.sections:
+        for section in self.parser.sections:
 
             rows.append(
                 (
@@ -52,21 +48,23 @@ def sections_command(args):
                 )
             )
 
-        table = (
+        return (
             "PE Sections",
-            ["Name", "Virtual Address", "Raw Size", "Entropy"],
+            ["Name", "VA", "Raw Size", "Entropy"],
             rows,
         )
 
-        dispatch(
-            args.output,
-            table_data=table,
-            json_data=parser.section_headers,
-        )
+    def build_json(self):
 
-    else:
+        if isinstance(self.parser, ELFParser):
+            return self.parser.section_headers
 
-        print("Unsupported binary.")
+        return self.parser.sections
+
+
+def sections_command(args):
+
+    SectionsCommand(args.file).run(args.output)
 
 def register_sections(subparsers):
 
