@@ -154,3 +154,12 @@ class PEParser:
             )
 
         return regions
+    
+    @property
+    def executable_sections(self):
+
+        return [
+            section
+            for section in self.sections
+            if section.characteristics & 0x20000000
+        ]

@@ -35,19 +35,29 @@ def search_command(args):
         ],
         [
             (
-                hex(addr),
-                bytes_,
-                mnemonic,
-                operands,
+                hex(ins.address),
+                ins.bytes.hex(" "),
+                ins.mnemonic,
+                ins.operands,
             )
-            for addr, bytes_, mnemonic, operands in rows
+            for ins in rows
         ],
     )
+
+    json_data = [
+        {
+            "address": hex(ins.address),
+            "bytes": ins.bytes.hex(" "),
+            "mnemonic": ins.mnemonic,
+            "operands": ins.operands,
+        }
+        for ins in rows
+    ]
 
     dispatch(
         args.output,
         table_data=table,
-        json_data=rows,
+        json_data=json_data,
     )
 
 

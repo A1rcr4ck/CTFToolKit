@@ -6,6 +6,7 @@ from capstone import (
 )
 
 from rev.reader import BinaryReader
+from rev.models import Instruction
 
 
 class Disassembler:
@@ -18,12 +19,14 @@ class Disassembler:
         machine = parser.header.machine
 
         if machine in ("AMD x86-64", "x86-64"):
+
             self.cs = Cs(
                 CS_ARCH_X86,
                 CS_MODE_64,
             )
 
         elif machine in ("Intel 80386", "x86"):
+
             self.cs = Cs(
                 CS_ARCH_X86,
                 CS_MODE_32,
@@ -31,6 +34,9 @@ class Disassembler:
 
         else:
             raise NotImplementedError(machine)
+
+        # Required for future analysis
+        self.cs.detail = True
 
     def section(
         self,
@@ -51,11 +57,12 @@ class Disassembler:
         ):
 
             instructions.append(
-                (
-                    ins.address,
-                    ins.bytes.hex(" "),
-                    ins.mnemonic,
-                    ins.op_str,
+                Instruction(
+                    address=ins.address,
+                    size=ins.size,
+                    bytes=ins.bytes,
+                    mnemonic=ins.mnemonic,
+                    operands=ins.op_str,
                 )
             )
 
@@ -63,3 +70,24 @@ class Disassembler:
                 break
 
         return instructions
+
+    def section_legacy(
+        self,
+        name: str,
+        count: int = 50,
+    ):
+
+        """
+        Compatibility wrapper for older plugins/tests.
+        Remove after migrating everything to Instruction.
+        """
+
+        return [
+            (
+                ins.address,
+                ins.bytes.hex(" "),
+                ins.mnemonic,
+                ins.operands,
+            )
+            for ins in self.section(name, count)
+        ]

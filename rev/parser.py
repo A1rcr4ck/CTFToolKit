@@ -17,3 +17,7 @@ class BinaryParser:
             return PEParser(path)
 
         raise ValueError("Unsupported binary format")
+    
+    @property
+    def executable_sections(self):
+        raise NotImplementedError

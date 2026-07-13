@@ -447,3 +447,16 @@ class ELFParser:
             )
 
         return regions
+    
+    @property
+    def sections(self):
+        return self.section_headers
+    
+    @property
+    def executable_sections(self):
+
+        return [
+            section
+            for section in self.sections
+            if section.flags & 0x4
+        ]

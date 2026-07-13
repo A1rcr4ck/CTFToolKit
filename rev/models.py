@@ -106,3 +106,11 @@ class Export:
 class Resource:
     id: int | None
     name: str | None
+
+@dataclass(slots=True)
+class Instruction:
+    address: int
+    size: int
+    bytes: bytes
+    mnemonic: str
+    operands: str

@@ -11,18 +11,11 @@ class InstructionSearcher:
 
         results = []
 
-        for addr, bytes_, ins, operands in self.disassembler.section(section):
+        for ins in self.disassembler.section(section):
 
-            if ins.lower() == mnemonic.lower():
+            if ins.mnemonic.lower() == mnemonic.lower():
 
-                results.append(
-                    (
-                        addr,
-                        bytes_,
-                        ins,
-                        operands,
-                    )
-                )
+                results.append(ins)
 
         return results
 
@@ -30,17 +23,10 @@ class InstructionSearcher:
 
         results = []
 
-        for addr, bytes_, ins, operands in self.disassembler.section(section):
+        for ins in self.disassembler.section(section):
 
-            if text.lower() in operands.lower():
+            if text.lower() in ins.operands.lower():
 
-                results.append(
-                    (
-                        addr,
-                        bytes_,
-                        ins,
-                        operands,
-                    )
-                )
+                results.append(ins)
 
         return results

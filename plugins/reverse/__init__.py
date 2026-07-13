@@ -17,6 +17,7 @@ from .disassemble import register_disassemble
 from .hexdump import register_hexdump
 from .functions import register_functions
 from .search import register_search
+from .xrefs import register_xrefs
 
 def register(subparsers):
 
@@ -49,3 +50,4 @@ def register(subparsers):
     register_hexdump(reverse_sub)
     register_functions(reverse_sub)
     register_search(reverse_sub)
+    register_xrefs(reverse_sub)

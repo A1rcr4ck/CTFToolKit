@@ -11,7 +11,7 @@ def disassemble_command(args):
 
     dis = Disassembler(parser)
 
-    rows = dis.section(
+    instructions = dis.section(
         args.section,
         args.count,
     )
@@ -21,19 +21,29 @@ def disassemble_command(args):
         ["Address", "Bytes", "Mnemonic", "Operands"],
         [
             (
-                hex(addr),
-                bytes_,
-                mnemonic,
-                operands,
+                hex(ins.address),
+                ins.bytes.hex(" "),
+                ins.mnemonic,
+                ins.operands,
             )
-            for addr, bytes_, mnemonic, operands in rows
+            for ins in instructions
         ],
     )
+
+    json_data = [
+        {
+            "address": hex(ins.address),
+            "bytes": ins.bytes.hex(" "),
+            "mnemonic": ins.mnemonic,
+            "operands": ins.operands,
+        }
+        for ins in instructions
+    ]
 
     dispatch(
         args.output,
         table_data=table,
-        json_data=rows,
+        json_data=json_data,
     )
 
 
