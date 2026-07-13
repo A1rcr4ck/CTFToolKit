@@ -16,6 +16,7 @@ from .pe_header import register_pe_header
 from .disassemble import register_disassemble
 from .hexdump import register_hexdump
 from .functions import register_functions
+from .search import register_search
 
 def register(subparsers):
 
@@ -47,3 +48,4 @@ def register(subparsers):
     register_disassemble(reverse_sub)
     register_hexdump(reverse_sub)
     register_functions(reverse_sub)
+    register_search(reverse_sub)
