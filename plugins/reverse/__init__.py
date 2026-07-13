@@ -18,6 +18,8 @@ from .hexdump import register_hexdump
 from .functions import register_functions
 from .search import register_search
 from .xrefs import register_xrefs
+from .rop import register_rop
+
 
 def register(subparsers):
 
@@ -51,3 +53,4 @@ def register(subparsers):
     register_functions(reverse_sub)
     register_search(reverse_sub)
     register_xrefs(reverse_sub)
+    register_rop(reverse_sub)
