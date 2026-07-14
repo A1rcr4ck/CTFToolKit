@@ -38,4 +38,10 @@ class ReverseEngine:
     @property
     def executable_sections(self):
         return self.parser.executable_sections
-    
+
+    @property
+    def decoded_instructions(self):
+        """
+        Returns the cached list of decoded instructions.
+        """
+        return self.instructions.all()

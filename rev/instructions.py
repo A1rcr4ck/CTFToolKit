@@ -8,7 +8,12 @@ class InstructionIndex:
         self.parser = parser
         self.disassembler = Disassembler(parser)
 
+        self._cache = None
+
     def all(self):
+
+        if self._cache is not None:
+            return self._cache
 
         instructions = []
 
@@ -25,4 +30,6 @@ class InstructionIndex:
             except Exception:
                 continue
 
-        return instructions
+        self._cache = instructions
+
+        return self._cache
