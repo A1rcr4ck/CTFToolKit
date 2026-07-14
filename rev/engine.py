@@ -4,6 +4,7 @@ from rev.disassembler import Disassembler
 from rev.instructions import InstructionIndex
 from rev.functions import FunctionFinder
 from rev.resolver import SymbolResolver
+from rev.instruction_db import InstructionDatabase
 
 
 class ReverseEngine:
@@ -32,6 +33,10 @@ class ReverseEngine:
         )
 
         self.functions = FunctionFinder(
+            self.parser
+        )
+
+        self.database = InstructionDatabase(
             self.parser
         )
 
