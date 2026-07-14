@@ -30,6 +30,7 @@ include-package-data = true
 include = [
     "core*",
     "crypto*",
+    "forensic*",
     "rev*",
     "usb*",
     "plugins*",
