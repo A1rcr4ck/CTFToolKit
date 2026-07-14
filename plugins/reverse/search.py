@@ -1,15 +1,17 @@
 from rev.parser import BinaryParser
 from rev.search import InstructionSearcher
-
+from rev.engine import ReverseEngine
 from core.cli import add_output_argument
 from core.output.dispatcher import dispatch
 
 
 def search_command(args):
 
-    parser = BinaryParser.open(args.file)
+    engine = ReverseEngine(args.file)
 
-    search = InstructionSearcher(parser)
+    search = InstructionSearcher(
+        engine.parser
+    )
 
     if args.mnemonic:
 

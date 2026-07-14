@@ -1,17 +1,15 @@
 from rev.parser import BinaryParser
 from rev.functions import FunctionFinder
-
+from rev.engine import ReverseEngine
 from core.cli import add_output_argument
 from core.output.dispatcher import dispatch
 
 
 def functions_command(args):
 
-    parser = BinaryParser.open(args.file)
+    engine = ReverseEngine(args.file)
 
-    functions = FunctionFinder(
-        parser
-    ).find()
+    functions = engine.functions.find()
 
     rows = []
 

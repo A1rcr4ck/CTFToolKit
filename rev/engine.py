@@ -26,3 +26,16 @@ class ReverseEngine:
         self.functions = FunctionFinder(
             self.parser
         )
+
+    @property
+    def memory(self):
+        return self.parser.memory
+
+    @property
+    def sections(self):
+        return self.parser.sections
+
+    @property
+    def executable_sections(self):
+        return self.parser.executable_sections
+    

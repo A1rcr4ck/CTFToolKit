@@ -1,79 +1,75 @@
 from core.cli import add_output_argument
 from core.output.dispatcher import dispatch
-
-from rev.parser import BinaryParser
-from rev.disassembler import Disassembler
+from rev.engine import ReverseEngine
 
 
 def disassemble_command(args):
 
-    parser = BinaryParser.open(args.file)
+        engine = ReverseEngine(args.file)
 
-    dis = Disassembler(parser)
+        instructions = engine.disassembler.section(
+            args.section,
+            args.count,
+        )
 
-    instructions = dis.section(
-        args.section,
-        args.count,
-    )
+        table = (
+            "Disassembly",
+            ["Address", "Bytes", "Mnemonic", "Operands"],
+            [
+                (
+                    hex(ins.address),
+                    ins.bytes.hex(" "),
+                    ins.mnemonic,
+                    ins.operands,
+                )
+                for ins in instructions
+            ],
+        )
 
-    table = (
-        "Disassembly",
-        ["Address", "Bytes", "Mnemonic", "Operands"],
-        [
-            (
-                hex(ins.address),
-                ins.bytes.hex(" "),
-                ins.mnemonic,
-                ins.operands,
-            )
+        json_data = [
+            {
+                "address": hex(ins.address),
+                "bytes": ins.bytes.hex(" "),
+                "mnemonic": ins.mnemonic,
+                "operands": ins.operands,
+            }
             for ins in instructions
-        ],
-    )
+        ]
 
-    json_data = [
-        {
-            "address": hex(ins.address),
-            "bytes": ins.bytes.hex(" "),
-            "mnemonic": ins.mnemonic,
-            "operands": ins.operands,
-        }
-        for ins in instructions
-    ]
-
-    dispatch(
-        args.output,
-        table_data=table,
-        json_data=json_data,
-    )
+        dispatch(
+            args.output,
+            table_data=table,
+            json_data=json_data,
+        )
 
 
 def register_disassemble(subparsers):
 
-    parser = subparsers.add_parser(
-        "disassemble",
-        help="Disassemble a section",
-    )
+        parser = subparsers.add_parser(
+            "disassemble",
+            help="Disassemble a section",
+        )
 
-    parser.add_argument(
-        "file",
-        help="Input binary",
-    )
+        parser.add_argument(
+            "file",
+            help="Input binary",
+        )
 
-    parser.add_argument(
-        "--section",
-        default=".text",
-        help="Section to disassemble",
-    )
+        parser.add_argument(
+            "--section",
+            default=".text",
+            help="Section to disassemble",
+        )
 
-    parser.add_argument(
-        "--count",
-        type=int,
-        default=30,
-        help="Number of instructions",
-    )
+        parser.add_argument(
+            "--count",
+            type=int,
+            default=30,
+            help="Number of instructions",
+        )
 
-    add_output_argument(parser)
+        add_output_argument(parser)
 
-    parser.set_defaults(
-        func=disassemble_command,
-    )
+        parser.set_defaults(
+            func=disassemble_command,
+        )
