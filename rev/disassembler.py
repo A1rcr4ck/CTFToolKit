@@ -11,9 +11,10 @@ from rev.models import Instruction
 
 class Disassembler:
 
-    def __init__(self, parser):
+    def __init__(self, parser, resolver=None):
 
         self.parser = parser
+        self.resolver = resolver
         self.reader = BinaryReader(parser.memory)
 
         machine = parser.header.machine
@@ -62,7 +63,9 @@ class Disassembler:
                     size=ins.size,
                     bytes=ins.bytes,
                     mnemonic=ins.mnemonic,
-                    operands=ins.op_str,
+                    operands=self._format_operand(
+                        ins.op_str
+                    ),
                 )
             )
 
@@ -91,3 +94,24 @@ class Disassembler:
             )
             for ins in self.section(name, count)
         ]
+    
+    def _format_operand(self, operand: str):
+
+        if self.resolver is None:
+            return operand
+
+        try:
+
+            value = int(operand, 16)
+
+        except ValueError:
+
+            return operand
+
+        symbol = self.resolver.resolve(value)
+
+        if symbol:
+
+            return symbol
+
+        return operand

@@ -5,6 +5,7 @@ from rev.instructions import InstructionIndex
 from rev.functions import FunctionFinder
 from rev.resolver import SymbolResolver
 
+
 class ReverseEngine:
 
     def __init__(self, path):
@@ -15,8 +16,15 @@ class ReverseEngine:
             self.parser.memory
         )
 
-        self.disassembler = Disassembler(
+        # Create the resolver first
+        self.resolver = SymbolResolver(
             self.parser
+        )
+
+        # Then pass it to the disassembler
+        self.disassembler = Disassembler(
+            self.parser,
+            self.resolver,
         )
 
         self.instructions = InstructionIndex(
@@ -24,10 +32,6 @@ class ReverseEngine:
         )
 
         self.functions = FunctionFinder(
-            self.parser
-        )
-
-        self.resolver = SymbolResolver(
             self.parser
         )
 
@@ -45,7 +49,4 @@ class ReverseEngine:
 
     @property
     def decoded_instructions(self):
-        """
-        Returns the cached list of decoded instructions.
-        """
         return self.instructions.all()
