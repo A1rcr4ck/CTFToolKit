@@ -3,7 +3,7 @@ from rev.reader import BinaryReader
 from rev.disassembler import Disassembler
 from rev.instructions import InstructionIndex
 from rev.functions import FunctionFinder
-
+from rev.resolver import SymbolResolver
 
 class ReverseEngine:
 
@@ -24,6 +24,10 @@ class ReverseEngine:
         )
 
         self.functions = FunctionFinder(
+            self.parser
+        )
+
+        self.resolver = SymbolResolver(
             self.parser
         )
 
