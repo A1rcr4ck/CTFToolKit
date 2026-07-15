@@ -2,6 +2,7 @@ from .hash import register_hash
 from .info import register_info
 from .strings import register_strings
 from .entropy import register_entropy
+from .hexdump import register_hexdump
 
 
 def register(subparsers):
@@ -20,3 +21,4 @@ def register(subparsers):
     register_info(forensic_sub)
     register_strings(forensic_sub)
     register_entropy(forensic_sub)
+    register_hexdump(forensic_sub)
