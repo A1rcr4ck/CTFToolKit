@@ -23,6 +23,9 @@ dependencies = [
     "base58",
 ]
 
+[project.scripts]
+ctf = "main:main"
+
 [tool.setuptools]
 include-package-data = true
 
