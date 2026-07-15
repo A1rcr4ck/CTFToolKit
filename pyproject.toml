@@ -24,17 +24,18 @@ dependencies = [
 ]
 
 [project.scripts]
-ctf = "main:main"
+ctf = "ctftoolkit.main:main"
 
 [tool.setuptools]
 include-package-data = true
 
 [tool.setuptools.packages.find]
 include = [
+    "ctftoolkit*",
     "core*",
     "crypto*",
     "forensic*",
+    "plugins*",
     "rev*",
     "usb*",
-    "plugins*",
 ]
