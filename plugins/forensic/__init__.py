@@ -6,6 +6,8 @@ from .hexdump import register_hexdump
 from .filetype import register_filetype
 from .exif import register_exif
 from .archive import register_archive
+from .pcap import register_pcap
+
 
 def register(subparsers):
 
@@ -27,3 +29,4 @@ def register(subparsers):
     register_filetype(forensic_sub)
     register_exif(forensic_sub)
     register_archive(forensic_sub)
+    register_pcap(forensic_sub)
