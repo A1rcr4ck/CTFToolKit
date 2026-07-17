@@ -3,7 +3,7 @@ from .info import register_info
 from .strings import register_strings
 from .entropy import register_entropy
 from .hexdump import register_hexdump
-
+from .filetype import register_filetype
 
 def register(subparsers):
 
@@ -22,3 +22,4 @@ def register(subparsers):
     register_strings(forensic_sub)
     register_entropy(forensic_sub)
     register_hexdump(forensic_sub)
+    register_filetype(forensic_sub)
