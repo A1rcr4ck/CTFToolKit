@@ -4,6 +4,7 @@ from .strings import register_strings
 from .entropy import register_entropy
 from .hexdump import register_hexdump
 from .filetype import register_filetype
+from .exif import register_exif
 
 def register(subparsers):
 
@@ -23,3 +24,4 @@ def register(subparsers):
     register_entropy(forensic_sub)
     register_hexdump(forensic_sub)
     register_filetype(forensic_sub)
+    register_exif(forensic_sub)
