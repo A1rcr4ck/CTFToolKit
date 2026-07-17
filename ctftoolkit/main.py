@@ -52,7 +52,16 @@ def main():
             return
 
     if hasattr(args, "func"):
-        args.func(args)
+        try:
+            args.func(args)
+
+        except KeyboardInterrupt:
+            print("\n[!] Interrupted by user.")
+            return 1
+
+        except Exception as e:
+            print(f"[ERROR] {e}")
+            return 1
     else:
         error("Invalid command.")
 
