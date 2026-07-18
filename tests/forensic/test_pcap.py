@@ -76,3 +76,54 @@ def test_http_requests(tmp_path):
     assert result[0]["method"] == "GET"
     assert result[0]["host"] == "example.com"
     assert result[0]["path"] == "/index.html"
+
+def test_tls_info(tmp_path):
+
+    pcap = tmp_path / "tls.pcap"
+
+    payload = (
+        b"\x16"
+        b"\x03\x03"
+        b"\x00\x31"
+        b"\x01"
+        + b"\x00" * 48
+    )
+
+    pkt = (
+        IP(src="10.0.0.1", dst="10.0.0.2")
+        / TCP(sport=55555, dport=443)
+        / Raw(load=payload)
+    )
+
+    wrpcap(str(pcap), [pkt])
+
+    result = PcapAnalyzer(str(pcap)).tls_info()
+
+    assert len(result) == 1
+    assert result[0]["version"] == "TLS 1.2"
+    assert result[0]["handshake"] == "ClientHello"
+
+def test_http_responses(tmp_path):
+
+    pcap = tmp_path / "response.pcap"
+
+    pkt = (
+        IP(src="10.0.0.2", dst="10.0.0.1")
+        / TCP(sport=80, dport=12345)
+        / Raw(
+            load=(
+                b"HTTP/1.1 200 OK\r\n"
+                b"Server: nginx\r\n"
+                b"Content-Type: text/html\r\n\r\n"
+            )
+        )
+    )
+
+    wrpcap(str(pcap), [pkt])
+
+    result = PcapAnalyzer(str(pcap)).http_responses()
+
+    assert result[0]["status"] == "200"
+    assert result[0]["reason"] == "OK"
+    assert result[0]["server"] == "nginx"
+    assert result[0]["content_type"] == "text/html"

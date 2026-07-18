@@ -6,7 +6,7 @@ from core.output.formatter import OutputFormat
 def register_pcap(subparsers):
     parser = subparsers.add_parser(
         "pcap",
-        help="Analyze a PCAP capture"
+        help="Analyze a PCAP capture",
     )
 
     parser.add_argument("file")
@@ -14,16 +14,7 @@ def register_pcap(subparsers):
     parser.add_argument(
         "--hosts",
         action="store_true",
-        help="Show hosts"
-    )
-
-    parser.add_argument(
-        "--output",
-        choices=[
-            OutputFormat.TABLE.value,
-            OutputFormat.JSON.value,
-        ],
-        default=OutputFormat.TABLE.value,
+        help="Show hosts",
     )
 
     parser.add_argument(
@@ -44,11 +35,34 @@ def register_pcap(subparsers):
         help="Show HTTP requests",
     )
 
+    parser.add_argument(
+        "--http-response",
+        action="store_true",
+        help="Show HTTP responses",
+    )
+
+    parser.add_argument(
+        "--tls",
+        action="store_true",
+        help="Show TLS handshake information",
+    )
+
+    parser.add_argument(
+        "--output",
+        choices=[
+            OutputFormat.TABLE.value,
+            OutputFormat.JSON.value,
+        ],
+        default=OutputFormat.TABLE.value,
+    )
+
     parser.set_defaults(func=pcap_command)
 
 
 def pcap_command(args):
     analyzer = PcapAnalyzer(args.file)
+
+    # ---------------- Hosts ----------------
 
     if args.hosts:
 
@@ -76,20 +90,7 @@ def pcap_command(args):
         )
         return
 
-    result = analyzer.summary()
-
-    if args.output == OutputFormat.JSON.value:
-        dispatch(
-            OutputFormat.JSON.value,
-            json_data=result,
-        )
-        return
-
-    rows = [
-        ["Packets", result["packets"]],
-        ["Unique Hosts", len(result["hosts"])],
-        ["Protocols", ", ".join(result["protocols"].keys())],
-    ]
+    # ---------------- Conversations ----------------
 
     if args.conversations:
 
@@ -132,10 +133,12 @@ def pcap_command(args):
                 rows,
             ),
         )
-
         return
-    
+
+    # ---------------- DNS ----------------
+
     if args.dns:
+
         result = analyzer.dns_queries()
 
         if args.output == OutputFormat.JSON.value:
@@ -161,9 +164,10 @@ def pcap_command(args):
                 rows,
             ),
         )
-
         return
-    
+
+    # ---------------- HTTP Requests ----------------
+
     if args.http:
 
         result = analyzer.http_requests()
@@ -192,8 +196,88 @@ def pcap_command(args):
                 rows,
             ),
         )
-
         return
+
+    # ---------------- HTTP Responses ----------------
+
+    if args.http_response:
+
+        result = analyzer.http_responses()
+
+        if args.output == OutputFormat.JSON.value:
+            dispatch(
+                OutputFormat.JSON.value,
+                json_data=result,
+            )
+            return
+
+        rows = []
+
+        for item in result:
+            rows.append([
+                item["status"],
+                item["reason"],
+                item["server"],
+                item["content_type"],
+            ])
+
+        dispatch(
+            OutputFormat.TABLE.value,
+            table_data=(
+                "HTTP Responses",
+                ["Status", "Reason", "Server", "Content-Type"],
+                rows,
+            ),
+        )
+        return
+
+    # ---------------- TLS ----------------
+
+    if args.tls:
+
+        result = analyzer.tls_info()
+
+        if args.output == OutputFormat.JSON.value:
+            dispatch(
+                OutputFormat.JSON.value,
+                json_data=result,
+            )
+            return
+
+        rows = []
+
+        for item in result:
+            rows.append([
+                item["version"],
+                item["handshake"],
+            ])
+
+        dispatch(
+            OutputFormat.TABLE.value,
+            table_data=(
+                "TLS Information",
+                ["Version", "Handshake"],
+                rows,
+            ),
+        )
+        return
+
+    # ---------------- Summary ----------------
+
+    result = analyzer.summary()
+
+    if args.output == OutputFormat.JSON.value:
+        dispatch(
+            OutputFormat.JSON.value,
+            json_data=result,
+        )
+        return
+
+    rows = [
+        ["Packets", result["packets"]],
+        ["Unique Hosts", len(result["hosts"])],
+        ["Protocols", ", ".join(result["protocols"].keys())],
+    ]
 
     dispatch(
         OutputFormat.TABLE.value,

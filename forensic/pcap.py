@@ -150,3 +150,108 @@ class PcapAnalyzer:
             )
 
         return requests
+    
+    def tls_info(self):
+        results = []
+
+        for pkt in self.packets:
+
+            if TCP not in pkt:
+                continue
+
+            payload = bytes(pkt[TCP].payload)
+
+            if len(payload) < 6:
+                continue
+
+            # TLS Record
+            if payload[0] != 0x16:
+                continue
+
+            version_map = {
+                b"\x03\x00": "SSL 3.0",
+                b"\x03\x01": "TLS 1.0",
+                b"\x03\x02": "TLS 1.1",
+                b"\x03\x03": "TLS 1.2",
+                b"\x03\x04": "TLS 1.3",
+            }
+
+            version = version_map.get(payload[1:3], "Unknown")
+
+            handshake = payload[5]
+
+            handshake_map = {
+                1: "ClientHello",
+                2: "ServerHello",
+                11: "Certificate",
+                12: "ServerKeyExchange",
+                14: "ServerHelloDone",
+                16: "ClientKeyExchange",
+                20: "Finished",
+            }
+
+            results.append(
+                {
+                    "version": version,
+                    "handshake": handshake_map.get(handshake, f"Type {handshake}"),
+                }
+            )
+
+        return results
+    
+    def http_responses(self):
+        responses = []
+
+        for pkt in self.packets:
+
+            if TCP not in pkt:
+                continue
+
+            payload = bytes(pkt[TCP].payload)
+
+            if not payload:
+                continue
+
+            try:
+                text = payload.decode("utf-8", errors="ignore")
+            except Exception:
+                continue
+
+            lines = text.split("\r\n")
+
+            if not lines:
+                continue
+
+            first = lines[0]
+
+            if not first.startswith("HTTP/"):
+                continue
+
+            parts = first.split()
+
+            if len(parts) < 3:
+                continue
+
+            status = parts[1]
+            reason = " ".join(parts[2:])
+
+            server = ""
+            content_type = ""
+
+            for line in lines:
+                lower = line.lower()
+
+                if lower.startswith("server:"):
+                    server = line.split(":", 1)[1].strip()
+
+                elif lower.startswith("content-type:"):
+                    content_type = line.split(":", 1)[1].strip()
+
+            responses.append({
+                "status": status,
+                "reason": reason,
+                "server": server,
+                "content_type": content_type,
+            })
+
+        return responses
