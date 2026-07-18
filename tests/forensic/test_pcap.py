@@ -1,7 +1,8 @@
 from scapy.all import Ether, IP, TCP, UDP, wrpcap
 from scapy.layers.dns import DNS, DNSQR
 from forensic.pcap import PcapAnalyzer
-from scapy.layers.http import HTTPRequest
+from scapy.layers.http import Raw
+
 
 def test_hosts(tmp_path):
     pcap = tmp_path / "sample.pcap"
@@ -55,18 +56,19 @@ def test_dns_queries(tmp_path):
 def test_http_requests(tmp_path):
     pcap = tmp_path / "http.pcap"
 
-    packets = [
-        Ether()
-        / IP(src="10.0.0.1", dst="10.0.0.2")
+    pkt = (
+        IP(src="10.0.0.1", dst="10.0.0.2")
         / TCP(sport=12345, dport=80)
-        / HTTPRequest(
-            Method=b"GET",
-            Host=b"example.com",
-            Path=b"/index.html",
+        / Raw(
+            load=(
+                b"GET /index.html HTTP/1.1\r\n"
+                b"Host: example.com\r\n"
+                b"User-Agent: Test\r\n\r\n"
+            )
         )
-    ]
+    )
 
-    wrpcap(str(pcap), packets)
+    wrpcap(str(pcap), [pkt])
 
     result = PcapAnalyzer(str(pcap)).http_requests()
 

@@ -92,14 +92,61 @@ class PcapAnalyzer:
 
         for pkt in self.packets:
 
-            if HTTPRequest in pkt:
+            if TCP not in pkt:
+                continue
 
-                http = pkt[HTTPRequest]
+            payload = bytes(pkt[TCP].payload)
 
-                requests.append({
-                    "method": http.Method.decode(errors="ignore"),
-                    "host": http.Host.decode(errors="ignore") if hasattr(http, "Host") else "",
-                    "path": http.Path.decode(errors="ignore") if hasattr(http, "Path") else "",
-                })
+            if not payload:
+                continue
+
+            try:
+                text = payload.decode("utf-8", errors="ignore")
+            except Exception:
+                continue
+
+            lines = text.split("\r\n")
+
+            if not lines:
+                continue
+
+            first = lines[0]
+
+            methods = (
+                "GET",
+                "POST",
+                "PUT",
+                "DELETE",
+                "HEAD",
+                "OPTIONS",
+                "PATCH",
+            )
+
+            if not first.startswith(methods):
+                continue
+
+            parts = first.split()
+
+            if len(parts) < 2:
+                continue
+
+            method = parts[0]
+            path = parts[1]
+
+            host = ""
+
+            for line in lines:
+
+                if line.lower().startswith("host:"):
+                    host = line.split(":", 1)[1].strip()
+                    break
+
+            requests.append(
+                {
+                    "method": method,
+                    "host": host,
+                    "path": path,
+                }
+            )
 
         return requests
