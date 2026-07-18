@@ -56,6 +56,18 @@ def register_pcap(subparsers):
         default=OutputFormat.TABLE.value,
     )
 
+    parser.add_argument(
+        "--credentials",
+        action="store_true",
+        help="Extract credentials from HTTP traffic",
+    )
+
+    parser.add_argument(
+        "--carve",
+        metavar="DIR",
+        help="Recover embedded files into a directory",
+    )
+
     parser.set_defaults(func=pcap_command)
 
 
@@ -287,3 +299,62 @@ def pcap_command(args):
             rows,
         ),
     )
+
+    if args.credentials:
+
+        result = analyzer.credentials()
+
+        if args.output == OutputFormat.JSON.value:
+            dispatch(
+                OutputFormat.JSON.value,
+                json_data=result,
+            )
+            return
+
+        rows = []
+
+        for item in result:
+            rows.append(
+                [
+                    item["type"],
+                    item["value"],
+                ]
+            )
+
+        dispatch(
+            OutputFormat.TABLE.value,
+            table_data=(
+                "Credentials",
+                ["Type", "Value"],
+                rows,
+            ),
+        )
+
+        return
+    
+    if args.carve:
+
+        result = analyzer.carve_files(args.carve)
+
+        if args.output == OutputFormat.JSON.value:
+            dispatch(
+                OutputFormat.JSON.value,
+                json_data=result,
+            )
+            return
+
+        rows = []
+
+        for file in result:
+            rows.append([file])
+
+        dispatch(
+            OutputFormat.TABLE.value,
+            table_data=(
+                "Recovered Files",
+                ["Filename"],
+                rows,
+            ),
+        )
+
+        return

@@ -1,7 +1,10 @@
+from pathlib import Path
+
 from scapy.all import Ether, IP, TCP, UDP, wrpcap
 from scapy.layers.dns import DNS, DNSQR
-from forensic.pcap import PcapAnalyzer
 from scapy.layers.http import Raw
+
+from forensic.pcap import PcapAnalyzer
 
 
 def test_hosts(tmp_path):
@@ -127,3 +130,55 @@ def test_http_responses(tmp_path):
     assert result[0]["reason"] == "OK"
     assert result[0]["server"] == "nginx"
     assert result[0]["content_type"] == "text/html"
+
+def test_credentials(tmp_path):
+
+    pcap = tmp_path / "cred.pcap"
+
+    pkt = (
+        IP(src="10.0.0.1", dst="10.0.0.2")
+        / TCP(sport=12345, dport=80)
+        / Raw(
+            load=(
+                b"GET / HTTP/1.1\r\n"
+                b"Host: example.com\r\n"
+                b"Authorization: Basic YWRtaW46cGFzc3dvcmQ=\r\n"
+                b"Cookie: PHPSESSID=abc123\r\n\r\n"
+            )
+        )
+    )
+
+    wrpcap(str(pcap), [pkt])
+
+    result = PcapAnalyzer(str(pcap)).credentials()
+
+    assert len(result) == 2
+    assert result[0]["type"] == "Basic Auth"
+    assert result[0]["value"] == "admin:password"
+    assert result[1]["type"] == "Cookie"
+
+def test_file_carving(tmp_path):
+
+    pcap = tmp_path / "carve.pcap"
+
+    png = (
+        b"\x89PNG\r\n\x1a\n"
+        + b"TESTDATA"
+        + b"IEND\xaeB`\x82"
+    )
+
+    pkt = (
+        IP(src="1.1.1.1", dst="2.2.2.2")
+        / TCP()
+        / Raw(load=png)
+    )
+
+    wrpcap(str(pcap), [pkt])
+
+    outdir = tmp_path / "output"
+
+    recovered = PcapAnalyzer(str(pcap)).carve_files(outdir)
+
+    assert len(recovered) == 1
+    assert Path(recovered[0]).exists()
+    assert recovered[0].endswith(".png")

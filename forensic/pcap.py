@@ -1,8 +1,11 @@
+import os
+from pathlib import Path
 from collections import Counter
 from scapy.all import rdpcap
 from scapy.layers.inet import IP, TCP, UDP
 from scapy.layers.dns import DNS, DNSQR
 from scapy.layers.http import HTTPRequest
+import base64
 
 class PcapAnalyzer:
     def __init__(self, filename):
@@ -255,3 +258,139 @@ class PcapAnalyzer:
             })
 
         return responses
+    
+    def credentials(self):
+        credentials = []
+
+        for pkt in self.packets:
+
+            if TCP not in pkt:
+                continue
+
+            payload = bytes(pkt[TCP].payload)
+
+            if not payload:
+                continue
+
+            try:
+                text = payload.decode("utf-8", errors="ignore")
+            except Exception:
+                continue
+
+            for line in text.split("\r\n"):
+
+                lower = line.lower()
+
+                if lower.startswith("authorization: basic "):
+
+                    encoded = line.split(" ", 2)[2].strip()
+
+                    try:
+                        decoded = base64.b64decode(encoded).decode(
+                            "utf-8",
+                            errors="ignore",
+                        )
+                    except Exception:
+                        decoded = "<invalid>"
+
+                    credentials.append(
+                        {
+                            "type": "Basic Auth",
+                            "value": decoded,
+                        }
+                    )
+
+                elif lower.startswith("authorization: bearer "):
+
+                    token = line.split(" ", 2)[2].strip()
+
+                    credentials.append(
+                        {
+                            "type": "Bearer Token",
+                            "value": token,
+                        }
+                    )
+
+                elif lower.startswith("cookie:"):
+
+                    cookie = line.split(":", 1)[1].strip()
+
+                    credentials.append(
+                        {
+                            "type": "Cookie",
+                            "value": cookie,
+                        }
+                    )
+
+        return credentials
+    
+    def carve_files(self, output_dir):
+        output = Path(output_dir)
+        output.mkdir(parents=True, exist_ok=True)
+
+        signatures = [
+            (
+                b"\x89PNG\r\n\x1a\n",
+                b"IEND\xaeB`\x82",
+                ".png",
+            ),
+            (
+                b"%PDF",
+                b"%%EOF",
+                ".pdf",
+            ),
+            (
+                b"PK\x03\x04",
+                None,
+                ".zip",
+            ),
+            (
+                b"\xff\xd8",
+                b"\xff\xd9",
+                ".jpg",
+            ),
+        ]
+
+        recovered = []
+        counter = 1
+
+        for pkt in self.packets:
+
+            if TCP not in pkt:
+                continue
+
+            payload = bytes(pkt[TCP].payload)
+
+            if not payload:
+                continue
+
+            for start_sig, end_sig, ext in signatures:
+
+                start = payload.find(start_sig)
+
+                if start == -1:
+                    continue
+
+                if end_sig:
+
+                #     end = payload.find(end_sig, start)
+
+                #     if end == -1:
+                #         continue
+
+                #     end += len(end_sig)
+                #     data = payload[start:end]
+
+                # else:
+                    data = payload[start:]
+
+                filename = output / f"{counter:04d}{ext}"
+
+                with open(filename, "wb") as f:
+                    f.write(data)
+
+                recovered.append(str(filename))
+
+                counter += 1
+
+        return recovered
