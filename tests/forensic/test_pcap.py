@@ -292,3 +292,29 @@ def test_extract_http_objects(tmp_path):
     assert exported.exists()
     assert exported.read_bytes() == b"Hello World"
     assert exported.suffix == ".txt"
+
+def test_http_content_length_respected(tmp_path):
+
+    pcap = tmp_path / "content_length.pcap"
+
+    payload = (
+        b"HTTP/1.1 200 OK\r\n"
+        b"Content-Type: text/plain\r\n"
+        b"Content-Length: 5\r\n\r\n"
+        b"HelloEXTRA_DATA"
+    )
+
+    pkt = (
+        IP(src="1.1.1.1", dst="2.2.2.2")
+        / TCP(sport=80, dport=1234)
+        / Raw(load=payload)
+    )
+
+    wrpcap(str(pcap), [pkt])
+
+    result = PcapAnalyzer(str(pcap)).http_bodies()
+
+    assert len(result) == 1
+    assert result[0]["expected_length"] == 5
+    assert result[0]["content_length"] == 5
+    assert result[0]["body"] == b"Hello"

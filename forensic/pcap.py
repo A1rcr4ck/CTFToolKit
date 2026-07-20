@@ -482,7 +482,7 @@ class PcapAnalyzer:
             if b"\r\n\r\n" not in data:
                 continue
 
-            header, body = data.split(b"\r\n\r\n", 1)
+            header, remaining = data.split(b"\r\n\r\n", 1)
 
             try:
                 header_text = header.decode(errors="replace")
@@ -515,6 +515,17 @@ class PcapAnalyzer:
 
                 headers[key.strip().lower()] = value.strip()
 
+            content_length = headers.get("content-length")
+
+            if content_length is not None:
+                try:
+                    expected = int(content_length)
+                    body = remaining[:expected]
+                except ValueError:
+                    body = remaining
+            else:
+                body = remaining
+
             bodies.append(
                 {
                     "src": stream["src"],
@@ -522,6 +533,11 @@ class PcapAnalyzer:
                     "host": headers.get("host"),
                     "content_type": headers.get("content-type"),
                     "content_length": len(body),
+                    "expected_length": (
+                        int(headers["content-length"])
+                        if headers.get("content-length", "").isdigit()
+                        else None
+                    ),
                     "body": body,
                 }
             )
