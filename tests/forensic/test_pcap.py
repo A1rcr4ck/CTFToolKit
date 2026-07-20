@@ -235,3 +235,29 @@ def test_export_streams(tmp_path):
 
     assert exported_file.exists()
     assert exported_file.read_bytes() == b"Hello World"
+
+def test_http_bodies(tmp_path):
+
+    pcap = tmp_path / "http_body.pcap"
+
+    payload = (
+        b"HTTP/1.1 200 OK\r\n"
+        b"Content-Type: text/plain\r\n"
+        b"Content-Length: 11\r\n\r\n"
+        b"Hello World"
+    )
+
+    pkt = (
+        IP(src="10.0.0.2", dst="10.0.0.1")
+        / TCP(sport=80, dport=1234, seq=1)
+        / Raw(load=payload)
+    )
+
+    wrpcap(str(pcap), [pkt])
+
+    result = PcapAnalyzer(str(pcap)).http_bodies()
+
+    assert len(result) == 1
+    assert result[0]["content_type"] == "text/plain"
+    assert result[0]["content_length"] == 11
+    assert result[0]["body"] == b"Hello World"

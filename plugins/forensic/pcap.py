@@ -80,6 +80,12 @@ def register_pcap(subparsers):
         help="Export reconstructed TCP streams",
     )
 
+    parser.add_argument(
+        "--http-body",
+        action="store_true",
+        help="Extract HTTP bodies from TCP streams",
+    )
+
     parser.set_defaults(func=pcap_command)
 
 
@@ -443,6 +449,54 @@ def pcap_command(args):
             table_data=(
                 "Exported Streams",
                 ["Filename"],
+                rows,
+            ),
+        )
+
+        return
+    
+    if args.http_body:
+
+        result = analyzer.http_bodies()
+
+        if args.output == OutputFormat.JSON.value:
+
+            dispatch(
+                OutputFormat.JSON.value,
+                json_data=[
+                    {
+                        **body,
+                        "body": body["body"].decode(
+                            "utf-8",
+                            errors="replace",
+                        ),
+                    }
+                    for body in result
+                ],
+            )
+            return
+
+        rows = []
+
+        for body in result:
+
+            rows.append(
+                [
+                    body["host"],
+                    body["content_type"],
+                    body["content_length"],
+                ]
+            )
+
+        dispatch(
+            OutputFormat.TABLE.value,
+            table_data=(
+                "HTTP Bodies",
+                [
+                    "Host",
+                    "Content-Type",
+                    "Bytes",
+                ],
                 rows,
             ),
         )

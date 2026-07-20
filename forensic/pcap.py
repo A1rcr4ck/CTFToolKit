@@ -471,3 +471,59 @@ class PcapAnalyzer:
             exported.append(str(filename))
 
         return exported
+    
+    def http_bodies(self):
+        bodies = []
+
+        for stream in self.tcp_streams():
+
+            data = stream["data"]
+
+            if b"\r\n\r\n" not in data:
+                continue
+
+            header, body = data.split(b"\r\n\r\n", 1)
+
+            try:
+                header_text = header.decode(errors="replace")
+            except Exception:
+                continue
+
+            lines = header_text.splitlines()
+
+            if not lines:
+                continue
+
+            first = lines[0]
+
+            if not (
+                first.startswith("GET")
+                or first.startswith("POST")
+                or first.startswith("PUT")
+                or first.startswith("HTTP/")
+            ):
+                continue
+
+            headers = {}
+
+            for line in lines[1:]:
+
+                if ":" not in line:
+                    continue
+
+                key, value = line.split(":", 1)
+
+                headers[key.strip().lower()] = value.strip()
+
+            bodies.append(
+                {
+                    "src": stream["src"],
+                    "dst": stream["dst"],
+                    "host": headers.get("host"),
+                    "content_type": headers.get("content-type"),
+                    "content_length": len(body),
+                    "body": body,
+                }
+            )
+
+        return bodies
