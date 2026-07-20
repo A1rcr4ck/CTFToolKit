@@ -86,6 +86,12 @@ def register_pcap(subparsers):
         help="Extract HTTP bodies from TCP streams",
     )
 
+    parser.add_argument(
+        "--extract-http",
+        metavar="DIR",
+        help="Extract HTTP response bodies as files",
+    )
+
     parser.set_defaults(func=pcap_command)
 
 
@@ -497,6 +503,30 @@ def pcap_command(args):
                     "Content-Type",
                     "Bytes",
                 ],
+                rows,
+            ),
+        )
+
+        return
+    
+    if args.extract_http:
+
+        result = analyzer.extract_http_objects(args.extract_http)
+
+        if args.output == OutputFormat.JSON.value:
+            dispatch(
+                OutputFormat.JSON.value,
+                json_data=result,
+            )
+            return
+
+        rows = [[file] for file in result]
+
+        dispatch(
+            OutputFormat.TABLE.value,
+            table_data=(
+                "Extracted HTTP Objects",
+                ["Filename"],
                 rows,
             ),
         )

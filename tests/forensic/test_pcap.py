@@ -261,3 +261,34 @@ def test_http_bodies(tmp_path):
     assert result[0]["content_type"] == "text/plain"
     assert result[0]["content_length"] == 11
     assert result[0]["body"] == b"Hello World"
+
+def test_extract_http_objects(tmp_path):
+
+    pcap = tmp_path / "http_object.pcap"
+
+    payload = (
+        b"HTTP/1.1 200 OK\r\n"
+        b"Content-Type: text/plain\r\n"
+        b"Content-Length: 11\r\n\r\n"
+        b"Hello World"
+    )
+
+    pkt = (
+        IP(src="10.0.0.2", dst="10.0.0.1")
+        / TCP(sport=80, dport=1234)
+        / Raw(load=payload)
+    )
+
+    wrpcap(str(pcap), [pkt])
+
+    outdir = tmp_path / "objects"
+
+    files = PcapAnalyzer(str(pcap)).extract_http_objects(outdir)
+
+    assert len(files) == 1
+
+    exported = Path(files[0])
+
+    assert exported.exists()
+    assert exported.read_bytes() == b"Hello World"
+    assert exported.suffix == ".txt"

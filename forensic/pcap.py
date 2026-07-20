@@ -527,3 +527,37 @@ class PcapAnalyzer:
             )
 
         return bodies
+    
+    def extract_http_objects(self, output_dir):
+        output = Path(output_dir)
+        output.mkdir(parents=True, exist_ok=True)
+
+        extracted = []
+
+        for index, body in enumerate(self.http_bodies(), start=1):
+
+            content_type = body.get("content_type") or ""
+
+            extension = ".bin"
+
+            if "text/plain" in content_type:
+                extension = ".txt"
+            elif "text/html" in content_type:
+                extension = ".html"
+            elif "application/pdf" in content_type:
+                extension = ".pdf"
+            elif "application/zip" in content_type:
+                extension = ".zip"
+            elif "image/png" in content_type:
+                extension = ".png"
+            elif "image/jpeg" in content_type:
+                extension = ".jpg"
+
+            filename = output / f"http_object_{index:04d}{extension}"
+
+            with open(filename, "wb") as f:
+                f.write(body["body"])
+
+            extracted.append(str(filename))
+
+        return extracted
