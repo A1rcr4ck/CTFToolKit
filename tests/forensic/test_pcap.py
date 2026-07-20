@@ -318,3 +318,30 @@ def test_http_content_length_respected(tmp_path):
     assert result[0]["expected_length"] == 5
     assert result[0]["content_length"] == 5
     assert result[0]["body"] == b"Hello"
+
+def test_chunked_http_response(tmp_path):
+
+    pcap = tmp_path / "chunked.pcap"
+
+    payload = (
+        b"HTTP/1.1 200 OK\r\n"
+        b"Transfer-Encoding: chunked\r\n"
+        b"Content-Type: text/plain\r\n\r\n"
+        b"5\r\nHello\r\n"
+        b"6\r\n World\r\n"
+        b"0\r\n\r\n"
+    )
+
+    pkt = (
+        IP(src="1.1.1.1", dst="2.2.2.2")
+        / TCP(sport=80, dport=1234)
+        / Raw(load=payload)
+    )
+
+    wrpcap(str(pcap), [pkt])
+
+    result = PcapAnalyzer(str(pcap)).http_bodies()
+
+    assert len(result) == 1
+    assert result[0]["body"] == b"Hello World"
+    assert result[0]["content_length"] == 11

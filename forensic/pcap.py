@@ -472,6 +472,34 @@ class PcapAnalyzer:
 
         return exported
     
+    # def _decode_chunked(self, body):
+
+    #     decoded = b""
+    #     offset = 0
+
+    #     while True:
+
+    #         end = body.find(b"\r\n", offset)
+
+    #         if end == -1:
+    #             break
+
+    #         try:
+    #             size = int(body[offset:end].decode(), 16)
+    #         except ValueError:
+    #             break
+
+    #         offset = end + 2
+
+    #         if size == 0:
+    #             break
+
+    #         decoded += body[offset:offset + size]
+
+    #         offset += size + 2
+
+    #     return decoded
+    
     def http_bodies(self):
         bodies = []
 
@@ -515,14 +543,14 @@ class PcapAnalyzer:
 
                 headers[key.strip().lower()] = value.strip()
 
-            content_length = headers.get("content-length")
+            if headers.get("content-length"):
 
-            if content_length is not None:
                 try:
-                    expected = int(content_length)
+                    expected = int(headers["content-length"])
                     body = remaining[:expected]
                 except ValueError:
                     body = remaining
+
             else:
                 body = remaining
 

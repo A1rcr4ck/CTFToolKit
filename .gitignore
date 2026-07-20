@@ -103,3 +103,6 @@ Thumbs.db
 # Generated forensic output
 exported/
 recovered/
+
+# Local development/debug scripts
+dev/
