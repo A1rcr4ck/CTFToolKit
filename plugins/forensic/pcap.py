@@ -74,6 +74,12 @@ def register_pcap(subparsers):
         help="Reassemble TCP streams",
     )
 
+    parser.add_argument(
+        "--export-streams",
+        metavar="DIR",
+        help="Export reconstructed TCP streams",
+    )
+
     parser.set_defaults(func=pcap_command)
 
 
@@ -415,3 +421,31 @@ def pcap_command(args):
         )
 
         return
+    
+    if args.export_streams:
+
+        result = analyzer.export_streams(args.export_streams)
+
+        if args.output == OutputFormat.JSON.value:
+            dispatch(
+                OutputFormat.JSON.value,
+                json_data=result,
+            )
+            return
+
+        rows = []
+
+        for file in result:
+            rows.append([file])
+
+        dispatch(
+            OutputFormat.TABLE.value,
+            table_data=(
+                "Exported Streams",
+                ["Filename"],
+                rows,
+            ),
+        )
+
+        return
+    

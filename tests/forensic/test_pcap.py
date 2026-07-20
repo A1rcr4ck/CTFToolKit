@@ -206,3 +206,32 @@ def test_tcp_streams(tmp_path):
     assert len(result) == 1
     assert result[0]["data"] == b"Hello World"
     assert result[0]["size"] == 11
+
+def test_export_streams(tmp_path):
+
+    pcap = tmp_path / "streams.pcap"
+
+    pkt1 = (
+        IP(src="10.0.0.1", dst="10.0.0.2")
+        / TCP(sport=1234, dport=80, seq=1)
+        / Raw(load=b"Hello ")
+    )
+
+    pkt2 = (
+        IP(src="10.0.0.1", dst="10.0.0.2")
+        / TCP(sport=1234, dport=80, seq=7)
+        / Raw(load=b"World")
+    )
+
+    wrpcap(str(pcap), [pkt1, pkt2])
+
+    outdir = tmp_path / "streams"
+
+    exported = PcapAnalyzer(str(pcap)).export_streams(outdir)
+
+    assert len(exported) == 1
+
+    exported_file = Path(exported[0])
+
+    assert exported_file.exists()
+    assert exported_file.read_bytes() == b"Hello World"

@@ -445,3 +445,29 @@ class PcapAnalyzer:
             )
 
         return result
+    
+    def export_streams(self, output_dir):
+        output = Path(output_dir)
+        output.mkdir(parents=True, exist_ok=True)
+
+        exported = []
+
+        for index, stream in enumerate(self.tcp_streams(), start=1):
+
+            filename = (
+                output
+                / (
+                    f"{index:04d}_"
+                    f"{stream['src']}_"
+                    f"{stream['sport']}_"
+                    f"{stream['dst']}_"
+                    f"{stream['dport']}.bin"
+                )
+            )
+
+            with open(filename, "wb") as f:
+                f.write(stream["data"])
+
+            exported.append(str(filename))
+
+        return exported
