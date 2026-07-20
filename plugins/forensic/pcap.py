@@ -68,6 +68,12 @@ def register_pcap(subparsers):
         help="Recover embedded files into a directory",
     )
 
+    parser.add_argument(
+        "--streams",
+        action="store_true",
+        help="Reassemble TCP streams",
+    )
+
     parser.set_defaults(func=pcap_command)
 
 
@@ -353,6 +359,57 @@ def pcap_command(args):
             table_data=(
                 "Recovered Files",
                 ["Filename"],
+                rows,
+            ),
+        )
+
+        return
+    
+    if args.streams:
+
+        result = analyzer.tcp_streams()
+
+        if args.output == OutputFormat.JSON.value:
+            dispatch(
+                OutputFormat.JSON.value,
+                json_data=[
+                    {
+                        **stream,
+                        "data": stream["data"].decode(
+                            "utf-8",
+                            errors="replace",
+                        ),
+                    }
+                    for stream in result
+                ],
+            )
+            return
+
+        rows = []
+
+        for stream in result:
+
+            rows.append(
+                [
+                    stream["src"],
+                    stream["sport"],
+                    stream["dst"],
+                    stream["dport"],
+                    stream["size"],
+                ]
+            )
+
+        dispatch(
+            OutputFormat.TABLE.value,
+            table_data=(
+                "TCP Streams",
+                [
+                    "Source",
+                    "Src Port",
+                    "Destination",
+                    "Dst Port",
+                    "Bytes",
+                ],
                 rows,
             ),
         )

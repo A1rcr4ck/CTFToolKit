@@ -182,3 +182,27 @@ def test_file_carving(tmp_path):
     assert len(recovered) == 1
     assert Path(recovered[0]).exists()
     assert recovered[0].endswith(".png")
+
+def test_tcp_streams(tmp_path):
+
+    pcap = tmp_path / "streams.pcap"
+
+    pkt1 = (
+        IP(src="10.0.0.1", dst="10.0.0.2")
+        / TCP(sport=1234, dport=80, seq=1)
+        / Raw(load=b"Hello ")
+    )
+
+    pkt2 = (
+        IP(src="10.0.0.1", dst="10.0.0.2")
+        / TCP(sport=1234, dport=80, seq=7)
+        / Raw(load=b"World")
+    )
+
+    wrpcap(str(pcap), [pkt1, pkt2])
+
+    result = PcapAnalyzer(str(pcap)).tcp_streams()
+
+    assert len(result) == 1
+    assert result[0]["data"] == b"Hello World"
+    assert result[0]["size"] == 11

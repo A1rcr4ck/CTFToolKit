@@ -394,3 +394,54 @@ class PcapAnalyzer:
                 counter += 1
 
         return recovered
+    
+    def tcp_streams(self):
+        streams = {}
+
+        for pkt in self.packets:
+
+            if IP not in pkt or TCP not in pkt:
+                continue
+
+            key = (
+                pkt[IP].src,
+                pkt[TCP].sport,
+                pkt[IP].dst,
+                pkt[TCP].dport,
+            )
+
+            payload = bytes(pkt[TCP].payload)
+
+            if not payload:
+                continue
+
+            streams.setdefault(key, []).append(
+                (
+                    pkt[TCP].seq,
+                    payload,
+                )
+            )
+
+        result = []
+
+        for key, packets in streams.items():
+
+            packets.sort(key=lambda x: x[0])
+
+            data = b"".join(
+                payload
+                for _, payload in packets
+            )
+
+            result.append(
+                {
+                    "src": key[0],
+                    "sport": key[1],
+                    "dst": key[2],
+                    "dport": key[3],
+                    "size": len(data),
+                    "data": data,
+                }
+            )
+
+        return result
