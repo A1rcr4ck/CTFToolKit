@@ -99,3 +99,7 @@ Thumbs.db
 *.pcapng
 *.cap
 *.core
+
+# Generated forensic output
+exported/
+recovered/
