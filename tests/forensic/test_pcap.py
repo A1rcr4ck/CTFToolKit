@@ -345,3 +345,14 @@ def test_chunked_http_response(tmp_path):
     assert len(result) == 1
     assert result[0]["body"] == b"Hello World"
     assert result[0]["content_length"] == 11
+
+def test_http_filename_recovery(tmp_path):
+
+    analyzer = PcapAnalyzer(
+        "tests/samples/forensics/sample_http_filename.pcap"
+    )
+
+    output = analyzer.extract_http_objects(tmp_path)
+
+    assert len(output) == 1
+    assert output[0].endswith("invoice.pdf")

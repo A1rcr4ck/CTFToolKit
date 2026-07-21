@@ -7,6 +7,8 @@ from scapy.layers.dns import DNS, DNSQR
 from scapy.layers.http import HTTPRequest
 import base64
 
+from core import output
+
 class PcapAnalyzer:
     def __init__(self, filename):
         self.filename = filename
@@ -543,6 +545,19 @@ class PcapAnalyzer:
 
                 headers[key.strip().lower()] = value.strip()
 
+                filename = None
+
+                content_disposition = headers.get("content-disposition", "")
+
+                if "filename=" in content_disposition:
+
+                    filename = content_disposition.split("filename=", 1)[1].strip()
+
+                    if filename.startswith('"') and filename.endswith('"'):
+                        filename = filename[1:-1]
+
+                    filename = os.path.basename(filename)
+
             if headers.get("content-length"):
 
                 try:
@@ -560,6 +575,7 @@ class PcapAnalyzer:
                     "dst": stream["dst"],
                     "host": headers.get("host"),
                     "content_type": headers.get("content-type"),
+                    "filename": filename,
                     "content_length": len(body),
                     "expected_length": (
                         int(headers["content-length"])
@@ -580,24 +596,32 @@ class PcapAnalyzer:
 
         for index, body in enumerate(self.http_bodies(), start=1):
 
-            content_type = body.get("content_type") or ""
+            filename = body.get("filename")
 
-            extension = ".bin"
+            if filename:
 
-            if "text/plain" in content_type:
-                extension = ".txt"
-            elif "text/html" in content_type:
-                extension = ".html"
-            elif "application/pdf" in content_type:
-                extension = ".pdf"
-            elif "application/zip" in content_type:
-                extension = ".zip"
-            elif "image/png" in content_type:
-                extension = ".png"
-            elif "image/jpeg" in content_type:
-                extension = ".jpg"
+                filename = output / filename
 
-            filename = output / f"http_object_{index:04d}{extension}"
+            else:
+
+                content_type = body.get("content_type") or ""
+
+                extension = ".bin"
+
+                if "text/plain" in content_type:
+                    extension = ".txt"
+                elif "text/html" in content_type:
+                    extension = ".html"
+                elif "application/pdf" in content_type:
+                    extension = ".pdf"
+                elif "application/zip" in content_type:
+                    extension = ".zip"
+                elif "image/png" in content_type:
+                    extension = ".png"
+                elif "image/jpeg" in content_type:
+                    extension = ".jpg"
+
+                filename = output / f"http_object_{index:04d}{extension}"
 
             with open(filename, "wb") as f:
                 f.write(body["body"])
